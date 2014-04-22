@@ -49,18 +49,28 @@ function request (params, fn) {
   // create HTTP Request object
   var req = superagent[method](url);
 
+  // Token authentication
   if (params.authToken) {
     req.set('Authorization', 'Bearer ' + params.authToken);
     delete params.authToken;
   }
 
-  if (['post', 'put'].indexOf(method) >= 0 && params.data) {
-    req.send(params.data);
-    debug('API send: ', params.data);
-    delete params.data;
+  // URL querystring values
+  if (params.query) {
+    req.query(params.query);
+    debug('API send URL querystring: ', params.query);
+    delete params.query;
   }
 
-  debug('API params: ', params);
+  // POST API request body
+  if ('post' == method && params.body) {
+    req.send(params.body);
+    debug('API send POST body: ', params.body);
+    delete params.body;
+  }
+
+  // XXX: delete this...
+  debug('unused API params: ', params);
 
   // start the request
   req.end(function (err, res){

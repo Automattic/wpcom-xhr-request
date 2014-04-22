@@ -5,7 +5,7 @@
 You likely want to use the high-level APIs in [`wpcom.js`][wpcom.js]
 instead of using this module directly.
 
-Works in both the browser and Node.js via `superagent`.
+Works in both the browser and Node.js via [`superagent`][superagent].
 
 
 ### Installation
@@ -43,3 +43,4 @@ MIT – Copyright Automattic 2014
 
 
 [wpcom.js]: https://github.com/Automattic/wpcom.js
+[superagent]: https://visionmedia.github.io/superagent/

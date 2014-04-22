@@ -54,8 +54,13 @@ function request (params, fn) {
     delete params.authToken;
   }
 
+  if (['post', 'put'].indexOf(method) >= 0 && params.data) {
+    req.send(params.data);
+    debug('API send: ', params.data);
+    delete params.data;
+  }
+
   debug('API params: ', params);
-  req.send(params);
 
   // start the request
   req.end(function (err, res){

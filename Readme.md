@@ -2,6 +2,9 @@
 
 **REST API requests to WordPress.com via XMLHttpRequest (and CORS)**
 
+You likely want to use the high-level APIs in [`wpcom.js`][]
+instead of using this module directly.
+
 Works in both the browser and Node.js via `superagent`.
 
 
@@ -37,3 +40,6 @@ $ npm install wpcom-xhr-request
 ### License
 
 MIT – Copyright Automattic 2014
+
+
+[wpcom.js]: https://github.com/Automattic/wpcom.js

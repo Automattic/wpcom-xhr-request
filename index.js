@@ -4,7 +4,7 @@
  */
 
 var superagent = require('superagent');
-var debug = require('debug')('wpcom:xml');
+var debug = require('debug')('wpcom-xhr-request');
 
 /**
  * Export a single `request` function.

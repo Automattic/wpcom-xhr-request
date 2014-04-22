@@ -1,0 +1,27 @@
+{
+  "name": "wpcom-xhr-request",
+  "description": "REST API requests to WordPress.com via XMLHttpRequest (and CORS)",
+  "keywords": [
+    "browser",
+    "wpcom",
+    "wordpress",
+    "rest",
+    "api",
+    "oauth"
+  ],
+  "version": "0.0.0",
+  "author": "Automattic, Inc.",
+  "contributors": [
+    "Damian Suarez <rdsuarez@gmail.com>",
+    "Nathan Rajlich <nathan@automattic.com>"
+  ],
+  "repository": "git://github.com/Automattic/wpcom-xhr-request.git",
+  "main": "index.js",
+  "devDependencies": {
+    "browserify": "3.44.0"
+  },
+  "dependencies": {
+    "debug": "0.8.0",
+    "superagent": "0.17.0"
+  }
+}

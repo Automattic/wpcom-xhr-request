@@ -39,11 +39,11 @@ function request (params, fn) {
   }
 
   var method = (params.method || 'GET').toLowerCase();
-  console.log('API HTTP Method:', method);
+  debug('API HTTP Method:', method);
   delete params.method;
 
   var url = apiUrl + params.path;
-  console.log('API URL:', url);
+  debug('API URL:', url);
   delete params.path;
 
   // create HTTP Request object
@@ -54,14 +54,12 @@ function request (params, fn) {
     delete params.authToken;
   }
 
-  //req.query({ http_envelope: 1 });
-  console.log('API params:', params);
+  debug('API params:', params);
   req.send(params);
 
   // start the request
   req.end(function (err, res){
     if (err) return fn(err);
-    console.log(res);
     var body = res.body;
 
     // check wpcom server error response
@@ -77,6 +75,4 @@ function request (params, fn) {
     debug('request successful');
     fn(null, body);
   });
-
-  return req;
 }

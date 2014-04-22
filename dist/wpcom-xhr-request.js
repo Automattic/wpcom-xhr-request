@@ -5,7 +5,7 @@
  */
 
 var superagent = _dereq_('superagent');
-var debug = _dereq_('debug')('wpcom:xml');
+var debug = _dereq_('debug')('wpcom-xhr-request');
 
 /**
  * Export a single `request` function.
@@ -40,44 +40,65 @@ function request (params, fn) {
   }
 
   var method = (params.method || 'GET').toLowerCase();
-  console.log('API HTTP Method:', method);
+  debug('API HTTP Method: `%s`', method);
   delete params.method;
 
   var url = apiUrl + params.path;
-  console.log('API URL:', url);
+  debug('API URL: `%s`', url);
   delete params.path;
 
+  // create HTTP Request object
   var req = superagent[method](url);
 
+  // Token authentication
   if (params.authToken) {
     req.set('Authorization', 'Bearer ' + params.authToken);
     delete params.authToken;
   }
 
-  //req.query({ http_envelope: 1 });
-  console.log('API params:', params);
-  req.send(params);
+  // URL querystring values
+  if (params.query) {
+    req.query(params.query);
+    debug('API send URL querystring: ', params.query);
+    delete params.query;
+  }
+
+  // POST API request body
+  if ('post' == method && params.body) {
+    req.send(params.body);
+    debug('API send POST body: ', params.body);
+    delete params.body;
+  }
+
+  // XXX: delete this...
+  debug('unused API params: ', params);
 
   // start the request
   req.end(function (err, res){
     if (err) return fn(err);
-    console.log(res);
+    var body = res.body;
+    var statusCode = res.status;
+    debug('%s -> %s status code', url, statusCode);
 
-    // check wpcom server error response
-    if (res.body.error) {
-      return fn(new Error(res.body.message));
+    if (2 === Math.floor(statusCode / 100)) {
+      // 2xx status code, success
+      fn(null, body);
+    } else {
+      // any other status code is a failure
+      err = new Error();
+      err.statusCode = statusCode;
+      for (var i in body) err[i] = body[i];
+      if (body.error) err.name = toTitle(body.error) + 'Error';
+      fn(err);
     }
-
-    // TODO: take a look to this one please
-    if ((/SyntaxError/).test(String(res.body))) {
-      return fn(res.body);
-    }
-
-    debug('request successful');
-    fn(null, res.body);
   });
+}
 
-  return req;
+function toTitle (str) {
+  if (!str || 'string' !== typeof str) return '';
+  return str.replace(/((^|_)[a-z])/g, function ($1) {
+    return $1.toUpperCase().replace('_', '');
+  });
 }
 
 },{"debug":2,"superagent":3}],2:[function(_dereq_,module,exports){

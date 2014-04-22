@@ -46,6 +46,7 @@ function request (params, fn) {
   console.log('API URL:', url);
   delete params.path;
 
+  // create HTTP Request object
   var req = superagent[method](url);
 
   if (params.authToken) {
@@ -61,19 +62,20 @@ function request (params, fn) {
   req.end(function (err, res){
     if (err) return fn(err);
     console.log(res);
+    var body = res.body;
 
     // check wpcom server error response
-    if (res.body.error) {
-      return fn(new Error(res.body.message));
+    if (body.error) {
+      return fn(new Error(body.message));
     }
 
     // TODO: take a look to this one please
-    if ((/SyntaxError/).test(String(res.body))) {
-      return fn(res.body);
+    if ((/SyntaxError/).test(String(body))) {
+      return fn(body);
     }
 
     debug('request successful');
-    fn(null, res.body);
+    fn(null, body);
   });
 
   return req;

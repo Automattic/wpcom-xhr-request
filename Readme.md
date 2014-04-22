@@ -37,6 +37,16 @@ $ npm install wpcom-xhr-request
 ```
 
 
+### Authentication
+
+For API requests that require authentication to WordPress.com, you must pass in an
+OAuth token as the `authToken` parameter in the `params` object for the API call.
+
+You can get an OAuth token server-side through
+[`node-wpcom-oauth`][node-wpcom-oauth], or any other OAuth2 interaction
+mechanism.
+
+
 ### License
 
 MIT – Copyright Automattic 2014
@@ -44,3 +54,4 @@ MIT – Copyright Automattic 2014
 
 [wpcom.js]: https://github.com/Automattic/wpcom.js
 [superagent]: https://visionmedia.github.io/superagent/
+[node-wpcom-oauth]: https://github.com/Automattic/node-wpcom-oauth

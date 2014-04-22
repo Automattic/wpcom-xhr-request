@@ -24,7 +24,7 @@ $ npm install wpcom-xhr-request
   <body>
     <script src="wpcom-xhr-request.js"></script>
     <script>
-      WPCOMXhrRequest('/me', function(err, res){
+      WPCOM.xhr('/me', function(err, res){
         if (err) throw err;
 
         var div = document.createElement('div');

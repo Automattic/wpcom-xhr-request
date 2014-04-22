@@ -61,18 +61,26 @@ function request (params, fn) {
   req.end(function (err, res){
     if (err) return fn(err);
     var body = res.body;
+    var statusCode = res.status;
+    debug('%s -> %s status code', url, statusCode);
 
-    // check wpcom server error response
-    if (body.error) {
-      return fn(new Error(body.message));
+    if (2 === Math.floor(statusCode / 100)) {
+      // 2xx status code, success
+      fn(null, body);
+    } else {
+      // any other status code is a failure
+      err = new Error();
+      err.statusCode = statusCode;
+      for (var i in body) err[i] = body[i];
+      if (body.error) err.name = toTitle(body.error) + 'Error';
+      fn(err);
     }
+  });
+}
 
-    // TODO: take a look to this one please
-    if ((/SyntaxError/).test(String(body))) {
-      return fn(body);
-    }
-
-    debug('request successful');
-    fn(null, body);
+function toTitle (str) {
+  if (!str || 'string' !== typeof str) return '';
+  return str.replace(/((^|_)[a-z])/g, function ($1) {
+    return $1.toUpperCase().replace('_', '');
   });
 }

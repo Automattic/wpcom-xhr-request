@@ -2,7 +2,7 @@
 
 **REST API requests to WordPress.com via XMLHttpRequest (and CORS)**
 
-You likely want to use the high-level APIs in [`wpcom.js`][]
+You likely want to use the high-level APIs in [`wpcom.js`][wpcom.js]
 instead of using this module directly.
 
 Works in both the browser and Node.js via `superagent`.

@@ -39,11 +39,11 @@ function request (params, fn) {
   }
 
   var method = (params.method || 'GET').toLowerCase();
-  debug('API HTTP Method:', method);
+  debug('API HTTP Method: `%s`', method);
   delete params.method;
 
   var url = apiUrl + params.path;
-  debug('API URL:', url);
+  debug('API URL: `%s`', url);
   delete params.path;
 
   // create HTTP Request object
@@ -54,7 +54,7 @@ function request (params, fn) {
     delete params.authToken;
   }
 
-  debug('API params:', params);
+  debug('API params: ', params);
   req.send(params);
 
   // start the request

@@ -19,7 +19,7 @@ clean:
 	@rm -rf node_modules dist
 
 dist:
-	@mkdir $@
+	@mkdir -p $@
 
 dist/wpcom-xhr-request.js: node_modules index.js dist
 	@$(BROWSERIFY) -s WPCOM.xhr index.js > $@

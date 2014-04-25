@@ -69,9 +69,6 @@ function request (params, fn) {
     delete params.body;
   }
 
-  // XXX: delete this...
-  debug('unused API params: ', params);
-
   // start the request
   req.end(function (err, res){
     if (err) return fn(err);

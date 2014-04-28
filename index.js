@@ -69,6 +69,17 @@ function request (params, fn) {
     delete params.body;
   }
 
+  // POST FormData (for `multipart/form-data`, usually a file upload)
+  if (params.formData) {
+    for (var i = 0; i < params.formData.length; i++) {
+      var data = params.formData[i];
+      var key = data[0];
+      var value = data[1];
+      debug('adding FormData field "%s"', key);
+      req.field(key, value);
+    }
+  }
+
   // start the request
   req.end(function (err, res){
     if (err) return fn(err);

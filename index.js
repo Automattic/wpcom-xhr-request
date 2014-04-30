@@ -63,10 +63,21 @@ function request (params, fn) {
   }
 
   // POST API request body
-  if ('post' == method && params.body) {
+  if (params.body) {
     req.send(params.body);
     debug('API send POST body: ', params.body);
     delete params.body;
+  }
+
+  // POST FormData (for `multipart/form-data`, usually a file upload)
+  if (params.formData) {
+    for (var i = 0; i < params.formData.length; i++) {
+      var data = params.formData[i];
+      var key = data[0];
+      var value = data[1];
+      debug('adding FormData field "%s"', key);
+      req.field(key, value);
+    }
   }
 
   // start the request

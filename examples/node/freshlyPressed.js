@@ -3,7 +3,7 @@
  * Example usage of `wpcom-xhr-request` used in Node.js
  */
 
-var request = require('./');
+var request = require('../../');
 
 request('/freshly-pressed', function (err, articles) {
   if (err) throw err;

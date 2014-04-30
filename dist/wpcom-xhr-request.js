@@ -64,14 +64,22 @@ function request (params, fn) {
   }
 
   // POST API request body
-  if ('post' == method && params.body) {
+  if (params.body) {
     req.send(params.body);
     debug('API send POST body: ', params.body);
     delete params.body;
   }
 
-  // XXX: delete this...
-  debug('unused API params: ', params);
+  // POST FormData (for `multipart/form-data`, usually a file upload)
+  if (params.formData) {
+    for (var i = 0; i < params.formData.length; i++) {
+      var data = params.formData[i];
+      var key = data[0];
+      var value = data[1];
+      debug('adding FormData field "%s"', key);
+      req.field(key, value);
+    }
+  }
 
   // start the request
   req.end(function (err, res){
@@ -659,13 +667,13 @@ Response.prototype.setStatusProperties = function(status){
 Response.prototype.toError = function(){
   var req = this.req;
   var method = req.method;
-  var path = req.path;
+  var url = req.url;
 
-  var msg = 'cannot ' + method + ' ' + path + ' (' + this.status + ')';
+  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
   var err = new Error(msg);
   err.status = this.status;
   err.method = method;
-  err.path = path;
+  err.url = url;
 
   return err;
 };
@@ -888,6 +896,51 @@ Request.prototype.query = function(val){
 };
 
 /**
+ * Write the field `name` and `val` for "multipart/form-data"
+ * request bodies.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .field('foo', 'bar')
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} name
+ * @param {String|Blob|File} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.field = function(name, val){
+  if (!this._formData) this._formData = new FormData();
+  this._formData.append(name, val);
+  return this;
+};
+
+/**
+ * Queue the given `file` as an attachment to the specified `field`,
+ * with optional `filename`.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} field
+ * @param {Blob|File} file
+ * @param {String} filename
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.attach = function(field, file, filename){
+  if (!this._formData) this._formData = new FormData();
+  this._formData.append(field, file, filename);
+  return this;
+};
+
+/**
  * Send `data`, defaulting the `.type()` to "json" when
  * an object is given.
  *
@@ -1037,7 +1090,7 @@ Request.prototype.end = function(fn){
   var xhr = this.xhr = getXHR();
   var query = this._query.join('&');
   var timeout = this._timeout;
-  var data = this._data;
+  var data = this._formData || this._data;
 
   // store callback
   this._callback = fn || noop;
@@ -1288,7 +1341,8 @@ function mixin(obj) {
  * @api public
  */
 
-Emitter.prototype.on = function(event, fn){
+Emitter.prototype.on =
+Emitter.prototype.addEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
   (this._callbacks[event] = this._callbacks[event] || [])
     .push(fn);
@@ -1314,7 +1368,7 @@ Emitter.prototype.once = function(event, fn){
     fn.apply(this, arguments);
   }
 
-  fn._off = on;
+  on.fn = fn;
   this.on(event, on);
   return this;
 };
@@ -1331,7 +1385,8 @@ Emitter.prototype.once = function(event, fn){
 
 Emitter.prototype.off =
 Emitter.prototype.removeListener =
-Emitter.prototype.removeAllListeners = function(event, fn){
+Emitter.prototype.removeAllListeners =
+Emitter.prototype.removeEventListener = function(event, fn){
   this._callbacks = this._callbacks || {};
 
   // all
@@ -1351,8 +1406,14 @@ Emitter.prototype.removeAllListeners = function(event, fn){
   }
 
   // remove specific handler
-  var i = callbacks.indexOf(fn._off || fn);
-  if (~i) callbacks.splice(i, 1);
+  var cb;
+  for (var i = 0; i < callbacks.length; i++) {
+    cb = callbacks[i];
+    if (cb === fn || cb.fn === fn) {
+      callbacks.splice(i, 1);
+      break;
+    }
+  }
   return this;
 };
 

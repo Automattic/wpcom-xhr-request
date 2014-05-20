@@ -85,8 +85,13 @@ function request (params, fn) {
   req.end(function (err, res){
     if (err) return fn(err);
     var body = res.body;
+    var headers = res.headers;
     var statusCode = res.status;
     debug('%s -> %s status code', url, statusCode);
+
+    if (body && headers) {
+      body._headers = headers;
+    }
 
     if (2 === Math.floor(statusCode / 100)) {
       // 2xx status code, success

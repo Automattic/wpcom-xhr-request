@@ -21,7 +21,7 @@
     "browserify": "3.44.0"
   },
   "dependencies": {
-    "debug": "0.8.0",
+    "debug": "1.0.0",
     "superagent": "0.18.0"
   }
 }

@@ -19,10 +19,26 @@ module.exports = request;
 var proxyOrigin = 'https://public-api.wordpress.com';
 
 /**
- * WordPress.com v1 REST API URL.
+ * Default WordPress.com REST API Version
  */
 
-var apiUrl = proxyOrigin + '/rest/v1';
+var defaultApiVersion = '1';
+
+/**
+ * Builds WordPress.com REST API URL
+ *
+ * @param {Object} params
+ */
+
+function buildApiUrl ( params ) {
+  var apiVersion = defaultApiVersion;
+  
+  if ( params.apiVersion ) {
+    apiVersion = params.apiVersion;
+  }
+
+  return proxyOrigin + '/rest/v' + apiVersion;
+}
 
 /**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
@@ -41,6 +57,10 @@ function request (params, fn) {
   var method = (params.method || 'GET').toLowerCase();
   debug('API HTTP Method: `%s`', method);
   delete params.method;
+
+  var apiUrl = buildApiUrl( params );
+  debug('API URL: `%s`', apiUrl);
+  delete params.apiVersion;
 
   var url = apiUrl + params.path;
   debug('API URL: `%s`', url);

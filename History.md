@@ -1,4 +1,11 @@
 
+0.2.3 / 2014-06-24
+==================
+
+  * dist: recompile
+  * package: update "browserify" to v4.1.11
+  * index: added support for non v1 API endpoints via `apiVersion` option
+
 0.2.2 / 2014-06-10
 ==================
 

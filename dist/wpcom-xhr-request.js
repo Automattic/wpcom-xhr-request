@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),(f.WPCOM||(f.WPCOM={})).xhr=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),(f.WPCOM||(f.WPCOM={})).xhr=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
 /**
  * Module dependencies.
@@ -20,10 +20,10 @@ module.exports = request;
 var proxyOrigin = 'https://public-api.wordpress.com';
 
 /**
- * WordPress.com v1 REST API URL.
+ * Default WordPress.com REST API Version.
  */
 
-var apiUrl = proxyOrigin + '/rest/v1';
+var defaultApiVersion = '1';
 
 /**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
@@ -43,7 +43,10 @@ function request (params, fn) {
   debug('API HTTP Method: `%s`', method);
   delete params.method;
 
-  var url = apiUrl + params.path;
+  var apiVersion = params.apiVersion || defaultApiVersion;
+  delete params.apiVersion;
+
+  var url = proxyOrigin + '/rest/v' + apiVersion + params.path;
   debug('API URL: `%s`', url);
   delete params.path;
 

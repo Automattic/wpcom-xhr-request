@@ -1,4 +1,9 @@
 
+0.2.4 / 2014-07-08
+==================
+
+ * index: handle the scenario when `res.body` is undefined
+
 0.2.3 / 2014-06-24
 ==================
 

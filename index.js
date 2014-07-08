@@ -103,7 +103,7 @@ function request (params, fn) {
       err = new Error();
       err.statusCode = statusCode;
       for (var i in body) err[i] = body[i];
-      if (body.error) err.name = toTitle(body.error) + 'Error';
+      if (body && body.error) err.name = toTitle(body.error) + 'Error';
       fn(err);
     }
   });

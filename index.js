@@ -39,14 +39,14 @@ function request (params, fn) {
   }
 
   var method = (params.method || 'GET').toLowerCase();
-  debug('API HTTP Method: `%s`', method);
+  debug('API HTTP Method: %o', method);
   delete params.method;
 
   var apiVersion = params.apiVersion || defaultApiVersion;
   delete params.apiVersion;
 
   var url = proxyOrigin + '/rest/v' + apiVersion + params.path;
-  debug('API URL: `%s`', url);
+  debug('API URL: %o', url);
   delete params.path;
 
   // create HTTP Request object
@@ -61,7 +61,7 @@ function request (params, fn) {
   // URL querystring values
   if (params.query) {
     req.query(params.query);
-    debug('API send URL querystring: ', params.query);
+    debug('API send URL querystring: %o', params.query);
     delete params.query;
   }
 
@@ -78,7 +78,7 @@ function request (params, fn) {
       var data = params.formData[i];
       var key = data[0];
       var value = data[1];
-      debug('adding FormData field "%s"', key);
+      debug('adding FormData field %o', key);
       req.field(key, value);
     }
   }
@@ -89,7 +89,7 @@ function request (params, fn) {
     var body = res.body;
     var headers = res.headers;
     var statusCode = res.status;
-    debug('%s -> %s status code', url, statusCode);
+    debug('%o -> %o status code', url, statusCode);
 
     if (body && headers) {
       body._headers = headers;

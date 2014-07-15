@@ -1,4 +1,11 @@
 
+0.2.5 / 2014-07-15
+==================
+
+ * package: update "superagent" to v0.18.2
+ * package: update "browserify" to v4.2.0
+ * index: use `%o` formatter for all debug() calls
+
 0.2.4 / 2014-07-08
 ==================
 

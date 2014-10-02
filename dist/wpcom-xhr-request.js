@@ -1,11 +1,11 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),(f.WPCOM||(f.WPCOM={})).xhr=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),(f.WPCOM||(f.WPCOM={})).xhr=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 /**
  * Module dependencies.
  */
 
-var superagent = _dereq_('superagent');
-var debug = _dereq_('debug')('wpcom-xhr-request');
+var superagent = require('superagent');
+var debug = require('debug')('wpcom-xhr-request');
 
 /**
  * Export a single `request` function.
@@ -117,7 +117,7 @@ function toTitle (str) {
   });
 }
 
-},{"debug":2,"superagent":5}],2:[function(_dereq_,module,exports){
+},{"debug":2,"superagent":5}],2:[function(require,module,exports){
 
 /**
  * This is the web browser implementation of `debug()`.
@@ -125,7 +125,7 @@ function toTitle (str) {
  * Expose `debug()` as the module.
  */
 
-exports = module.exports = _dereq_('./debug');
+exports = module.exports = require('./debug');
 exports.log = log;
 exports.formatArgs = formatArgs;
 exports.save = save;
@@ -146,9 +146,9 @@ exports.colors = [
 ];
 
 /**
- * Currently only WebKit-based Web Inspectors and the Firebug
- * extension (*not* the built-in Firefox web inpector) are
- * known to support "%c" CSS customizations.
+ * Currently only WebKit-based Web Inspectors, Firefox >= v31,
+ * and the Firebug extension (any Firefox version) are known
+ * to support "%c" CSS customizations.
  *
  * TODO: add a `localStorage` variable to explicitly enable/disable colors
  */
@@ -157,7 +157,10 @@ function useColors() {
   // is webkit? http://stackoverflow.com/a/16459606/376773
   return ('WebkitAppearance' in document.documentElement.style) ||
     // is firebug? http://stackoverflow.com/a/398120/376773
-    (window.console && (console.firebug || (console.exception && console.table)));
+    (window.console && (console.firebug || (console.exception && console.table))) ||
+    // is firefox >= v31?
+    // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
+    (navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31);
 }
 
 /**
@@ -181,7 +184,7 @@ function formatArgs() {
 
   args[0] = (useColors ? '%c' : '')
     + this.namespace
-    + (useColors ? '%c ' : ' ')
+    + (useColors ? ' %c' : ' ')
     + args[0]
     + (useColors ? '%c ' : ' ')
     + '+' + exports.humanize(this.diff);
@@ -189,7 +192,7 @@ function formatArgs() {
   if (!useColors) return args;
 
   var c = 'color: ' + this.color;
-  args = [args[0], c, ''].concat(Array.prototype.slice.call(args, 1));
+  args = [args[0], c, 'color: inherit'].concat(Array.prototype.slice.call(args, 1));
 
   // the final "%c" is somewhat tricky, because there could be other
   // arguments passed either before or after the %c, so we need to
@@ -263,7 +266,7 @@ function load() {
 
 exports.enable(load());
 
-},{"./debug":3}],3:[function(_dereq_,module,exports){
+},{"./debug":3}],3:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -277,7 +280,7 @@ exports.coerce = coerce;
 exports.disable = disable;
 exports.enable = enable;
 exports.enabled = enabled;
-exports.humanize = _dereq_('ms');
+exports.humanize = require('ms');
 
 /**
  * The currently active debug mode names, and names to skip.
@@ -379,7 +382,7 @@ function debug(namespace) {
     if ('function' === typeof exports.formatArgs) {
       args = exports.formatArgs.apply(self, args);
     }
-    var logFn = exports.log || enabled.log || console.log.bind(console);
+    var logFn = enabled.log || exports.log || console.log.bind(console);
     logFn.apply(self, args);
   }
   enabled.enabled = true;
@@ -462,7 +465,7 @@ function coerce(val) {
   return val;
 }
 
-},{"ms":4}],4:[function(_dereq_,module,exports){
+},{"ms":4}],4:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -575,13 +578,13 @@ function plural(ms, n, name) {
   return Math.ceil(ms / n) + ' ' + name + 's';
 }
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],5:[function(require,module,exports){
 /**
  * Module dependencies.
  */
 
-var Emitter = _dereq_('emitter');
-var reduce = _dereq_('reduce');
+var Emitter = require('emitter');
+var reduce = require('reduce');
 
 /**
  * Root reference for iframes.
@@ -932,7 +935,7 @@ Response.prototype.setHeaderProperties = function(header){
 
 Response.prototype.parseBody = function(str){
   var parse = request.parse[this.type];
-  return parse
+  return parse && str && str.length
     ? parse(str)
     : null;
 };
@@ -1028,9 +1031,16 @@ function Request(method, url) {
   this.header = {};
   this._header = {};
   this.on('end', function(){
-    var res = new Response(self);
-    if ('HEAD' == method) res.text = null;
-    self.callback(null, res);
+    try {
+      var res = new Response(self);
+      if ('HEAD' == method) res.text = null;
+      self.callback(null, res);
+    } catch(e) {
+      var err = new Error('Parser is unable to parse the response');
+      err.parse = true;
+      err.original = e;
+      self.callback(err);
+    }
   });
 }
 
@@ -1120,6 +1130,26 @@ Request.prototype.set = function(field, val){
   }
   this._header[field.toLowerCase()] = val;
   this.header[field] = val;
+  return this;
+};
+
+/**
+ * Remove header `field`.
+ *
+ * Example:
+ *
+ *      req.get('/')
+ *        .unset('User-Agent')
+ *        .end(callback);
+ *
+ * @param {String} field
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.unset = function(field){
+  delete this._header[field.toLowerCase()];
+  delete this.header[field];
   return this;
 };
 
@@ -1626,7 +1656,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":6,"reduce":7}],6:[function(_dereq_,module,exports){
+},{"emitter":6,"reduce":7}],6:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -1792,7 +1822,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],7:[function(require,module,exports){
 
 /**
  * Reduce `arr` with `fn`.
@@ -1817,6 +1847,5 @@ module.exports = function(arr, fn, initial){
   
   return curr;
 };
-},{}]},{},[1])
-(1)
+},{}]},{},[1])(1)
 });

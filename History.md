@@ -1,4 +1,12 @@
 
+0.2.6 / 2014-10-02
+==================
+
+ * dist: recompile
+ * package: update "superagent" to v0.19.1
+ * package: update "browserify" to v5.12.1
+ * package: update "debug" to v2.0.0
+
 0.2.5 / 2014-07-15
 ==================
 

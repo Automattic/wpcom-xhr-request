@@ -108,6 +108,8 @@ function request (params, fn) {
       fn(err);
     }
   });
+
+  return req.xhr;
 }
 
 function toTitle (str) {

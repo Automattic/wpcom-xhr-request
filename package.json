@@ -18,7 +18,7 @@
   "repository": "git://github.com/Automattic/wpcom-xhr-request.git",
   "main": "index.js",
   "devDependencies": {
-    "browserify": "5.12.1"
+    "browserify": "6.1.0"
   },
   "dependencies": {
     "debug": "~2.0.0",

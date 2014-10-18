@@ -1,4 +1,14 @@
 
+0.3.0 / 2014-10-18
+==================
+
+ * package: update "debug" to v2.1.0
+ * package: update "browserify" to v6.1.0
+ * package: update "superagent" to v0.20.0
+ * examples: add browser "upload" example
+ * index: return the native XHR request instance
+ * dist: recompile
+
 0.2.6 / 2014-10-02
 ==================
 

@@ -6,20 +6,11 @@
   </head>
   <body>
     <input type="file" id="file" multiple>
-    <script src="http://wzrd.in/standalone/url@0.10.x"></script>
-    <script src="http://wzrd.in/standalone/querystring@0.2.x"></script>
+    <script src="http://wzrd.in/standalone/wpcom-browser-auth@1.0.x"></script>
     <script src="../../dist/wpcom-xhr-request.js"></script>
-    Select one or more files to upload to site ID: <span id="site"></span>
+    Select one or more files to upload to site ID: <strong id="site"></strong>
     <script>
-      var hash, parsed;
-
-      // parse the current URL, in case of an OAuth token response
-      parsed = url.parse(location.href, true);
-
-      // we have to parse the "hash" manually
-      if (parsed.hash && parsed.hash.length > 1) {
-        hash = querystring.parse(parsed.hash.substring(1));
-      }
+      var auth = wpcomBrowserAuth.response();
 
       function onchange (e) {
         // construct a 2D `formData` array for the selected files
@@ -31,8 +22,8 @@
 
         // do the API request through a CORS XHR request
         var req = WPCOM.xhr({
-          authToken: hash.access_token,
-          path: '/sites/' + hash.site_id + '/media/new',
+          authToken: auth.access_token,
+          path: '/sites/' + auth.site_id + '/media/new',
           method: 'POST',
           formData: formData
         }, function(err, res){
@@ -53,22 +44,16 @@
         }
       }
 
-      if (hash && hash.access_token) {
+      if (auth && auth.access_token) {
         // OAuth response
-        document.getElementById('site').innerHTML = hash.site_id;
+        document.getElementById('site').innerHTML = auth.site_id;
 
         // select files on the "input" element
         var input = document.getElementById('file');
         input.onchange = onchange;
       } else {
         // redirect to OAuth page
-        var authorizeEndpoint = 'https://public-api.wordpress.com/oauth2/authorize';
-        var params = {
-          client_id: '37197',
-          response_type: 'token',
-          redirect_uri: 'http://localhost:3000/examples/browser/upload.html'
-        };
-        window.location = authorizeEndpoint + '?' + querystring.stringify(params);
+        wpcomBrowserAuth.redirect('37197');
       }
     </script>
   </body>

@@ -135,6 +135,17 @@ exports.load = load;
 exports.useColors = useColors;
 
 /**
+ * Use chrome.storage.local if we are in an app
+ */
+
+var storage;
+
+if (typeof chrome !== 'undefined' && typeof chrome.storage !== 'undefined')
+  storage = chrome.storage.local;
+else
+  storage = localstorage();
+
+/**
  * Colors.
  */
 
@@ -223,10 +234,10 @@ function formatArgs() {
  */
 
 function log() {
-  // This hackery is required for IE8,
-  // where the `console.log` function doesn't have 'apply'
-  return 'object' == typeof console
-    && 'function' == typeof console.log
+  // this hackery is required for IE8/9, where
+  // the `console.log` function doesn't have 'apply'
+  return 'object' === typeof console
+    && console.log
     && Function.prototype.apply.call(console.log, console, arguments);
 }
 
@@ -240,9 +251,9 @@ function log() {
 function save(namespaces) {
   try {
     if (null == namespaces) {
-      localStorage.removeItem('debug');
+      storage.removeItem('debug');
     } else {
-      localStorage.debug = namespaces;
+      storage.debug = namespaces;
     }
   } catch(e) {}
 }
@@ -257,7 +268,7 @@ function save(namespaces) {
 function load() {
   var r;
   try {
-    r = localStorage.debug;
+    r = storage.debug;
   } catch(e) {}
   return r;
 }
@@ -267,6 +278,23 @@ function load() {
  */
 
 exports.enable(load());
+
+/**
+ * Localstorage attempts to return the localstorage.
+ *
+ * This is necessary because safari throws
+ * when a user disables cookies/localstorage
+ * and you attempt to access it.
+ *
+ * @return {LocalStorage}
+ * @api private
+ */
+
+function localstorage(){
+  try {
+    return window.localStorage;
+  } catch (e) {}
+}
 
 },{"./debug":3}],3:[function(require,module,exports){
 
@@ -508,13 +536,15 @@ module.exports = function(val, options){
  */
 
 function parse(str) {
-  var match = /^((?:\d+)?\.?\d+) *(ms|seconds?|s|minutes?|m|hours?|h|days?|d|years?|y)?$/i.exec(str);
+  var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str);
   if (!match) return;
   var n = parseFloat(match[1]);
   var type = (match[2] || 'ms').toLowerCase();
   switch (type) {
     case 'years':
     case 'year':
+    case 'yrs':
+    case 'yr':
     case 'y':
       return n * y;
     case 'days':
@@ -523,16 +553,26 @@ function parse(str) {
       return n * d;
     case 'hours':
     case 'hour':
+    case 'hrs':
+    case 'hr':
     case 'h':
       return n * h;
     case 'minutes':
     case 'minute':
+    case 'mins':
+    case 'min':
     case 'm':
       return n * m;
     case 'seconds':
     case 'second':
+    case 'secs':
+    case 'sec':
     case 's':
       return n * s;
+    case 'milliseconds':
+    case 'millisecond':
+    case 'msecs':
+    case 'msec':
     case 'ms':
       return n;
   }
@@ -630,7 +670,7 @@ function isHost(obj) {
  * Determine XHR.
  */
 
-function getXHR() {
+request.getXHR = function () {
   if (root.XMLHttpRequest
     && ('file:' != root.location.protocol || !root.ActiveXObject)) {
     return new XMLHttpRequest;
@@ -641,7 +681,7 @@ function getXHR() {
     try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
   }
   return false;
-}
+};
 
 /**
  * Removes leading and trailing whitespace, added to support IE.
@@ -877,7 +917,11 @@ function Response(req, options) {
   options = options || {};
   this.req = req;
   this.xhr = this.req.xhr;
-  this.text = this.xhr.responseText;
+  // responseText is accessible only if responseType is '' or 'text' and on older browsers
+  this.text = ((this.req.method !='HEAD' && (this.xhr.responseType === '' || this.xhr.responseType === 'text')) || typeof this.xhr.responseType === 'undefined')
+     ? this.xhr.responseText
+     : null;
+  this.statusText = this.req.xhr.statusText;
   this.setStatusProperties(this.xhr.status);
   this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
   // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
@@ -886,7 +930,7 @@ function Response(req, options) {
   this.header['content-type'] = this.xhr.getResponseHeader('content-type');
   this.setHeaderProperties(this.header);
   this.body = this.req.method != 'HEAD'
-    ? this.parseBody(this.text)
+    ? this.parseBody(this.text ? this.text : this.xhr.response)
     : null;
 }
 
@@ -937,7 +981,7 @@ Response.prototype.setHeaderProperties = function(header){
 
 Response.prototype.parseBody = function(str){
   var parse = request.parse[this.type];
-  return parse && str && str.length
+  return parse && str && (str.length || str instanceof Object)
     ? parse(str)
     : null;
 };
@@ -1033,16 +1077,34 @@ function Request(method, url) {
   this.header = {};
   this._header = {};
   this.on('end', function(){
+    var err = null;
+    var res = null;
+
     try {
-      var res = new Response(self);
-      if ('HEAD' == method) res.text = null;
-      self.callback(null, res);
+      res = new Response(self);
     } catch(e) {
-      var err = new Error('Parser is unable to parse the response');
+      err = new Error('Parser is unable to parse the response');
       err.parse = true;
       err.original = e;
-      self.callback(err);
+      return self.callback(err);
     }
+
+    self.emit('response', res);
+
+    if (err) {
+      return self.callback(err, res);
+    }
+
+    if (res.status >= 200 && res.status < 300) {
+      return self.callback(err, res);
+    }
+
+    var new_err = new Error(res.statusText || 'Unsuccessful HTTP response');
+    new_err.original = err;
+    new_err.response = res;
+    new_err.status = res.status;
+
+    self.callback(err || new_err, res);
   });
 }
 
@@ -1271,7 +1333,7 @@ Request.prototype.query = function(val){
  */
 
 Request.prototype.field = function(name, val){
-  if (!this._formData) this._formData = new FormData();
+  if (!this._formData) this._formData = new root.FormData();
   this._formData.append(name, val);
   return this;
 };
@@ -1294,7 +1356,7 @@ Request.prototype.field = function(name, val){
  */
 
 Request.prototype.attach = function(field, file, filename){
-  if (!this._formData) this._formData = new FormData();
+  if (!this._formData) this._formData = new root.FormData();
   this._formData.append(field, file, filename);
   return this;
 };
@@ -1373,7 +1435,7 @@ Request.prototype.send = function(data){
     this._data = data;
   }
 
-  if (!obj) return this;
+  if (!obj || isHost(data)) return this;
   if (!type) this.type('json');
   return this;
 };
@@ -1389,9 +1451,8 @@ Request.prototype.send = function(data){
 
 Request.prototype.callback = function(err, res){
   var fn = this._callback;
-  if (2 == fn.length) return fn(err, res);
-  if (err) return this.emit('error', err);
-  fn(res);
+  this.clearTimeout();
+  fn(err, res);
 };
 
 /**
@@ -1446,7 +1507,7 @@ Request.prototype.withCredentials = function(){
 
 Request.prototype.end = function(fn){
   var self = this;
-  var xhr = this.xhr = getXHR();
+  var xhr = this.xhr = request.getXHR();
   var query = this._query.join('&');
   var timeout = this._timeout;
   var data = this._formData || this._data;
@@ -1457,24 +1518,38 @@ Request.prototype.end = function(fn){
   // state change
   xhr.onreadystatechange = function(){
     if (4 != xhr.readyState) return;
-    if (0 == xhr.status) {
-      if (self.aborted) return self.timeoutError();
+
+    // In IE9, reads to any property (e.g. status) off of an aborted XHR will
+    // result in the error "Could not complete the operation due to error c00c023f"
+    var status;
+    try { status = xhr.status } catch(e) { status = 0; }
+
+    if (0 == status) {
+      if (self.timedout) return self.timeoutError();
+      if (self.aborted) return;
       return self.crossDomainError();
     }
     self.emit('end');
   };
 
   // progress
-  if (xhr.upload) {
-    xhr.upload.onprogress = function(e){
-      e.percent = e.loaded / e.total * 100;
-      self.emit('progress', e);
-    };
+  try {
+    if (xhr.upload && this.hasListeners('progress')) {
+      xhr.upload.onprogress = function(e){
+        e.percent = e.loaded / e.total * 100;
+        self.emit('progress', e);
+      };
+    }
+  } catch(e) {
+    // Accessing xhr.upload fails in IE from a web worker, so just pretend it doesn't exist.
+    // Reported here:
+    // https://connect.microsoft.com/IE/feedback/details/837245/xmlhttprequest-upload-throws-invalid-argument-when-used-from-web-worker-context
   }
 
   // timeout
   if (timeout && !this._timer) {
     this._timer = setTimeout(function(){
+      self.timedout = true;
       self.abort();
     }, timeout);
   }

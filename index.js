@@ -85,7 +85,10 @@ function request (params, fn) {
 
   // start the request
   req.end(function (err, res){
-    if (err) return fn(err);
+    if (err && !res) {
+      return fn(err);
+    }
+
     var body = res.body;
     var headers = res.headers;
     var statusCode = res.status;
@@ -95,17 +98,21 @@ function request (params, fn) {
       body._headers = headers;
     }
 
-    if (2 === Math.floor(statusCode / 100)) {
-      // 2xx status code, success
-      fn(null, body);
-    } else {
-      // any other status code is a failure
-      err = new Error();
-      err.statusCode = statusCode;
-      for (var i in body) err[i] = body[i];
-      if (body && body.error) err.name = toTitle(body.error) + 'Error';
-      fn(err);
+    if (!err) {
+      return fn(null, body);
     }
+
+    err = new Error();
+    err.statusCode = statusCode;
+    for (var i in body) {
+      err[i] = body[i];
+    }
+
+    if (body && body.error) {
+      err.name = toTitle(body.error) + 'Error';
+    }
+
+    fn(err);
   });
 
   return req.xhr;

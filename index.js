@@ -45,6 +45,9 @@ function request (params, fn) {
   var apiVersion = params.apiVersion || defaultApiVersion;
   delete params.apiVersion;
 
+  proxyOrigin = params.proxyOrigin || proxyOrigin;
+  delete params.proxyOrigin;
+
   var url = proxyOrigin + '/rest/v' + apiVersion + params.path;
   debug('API URL: %o', url);
   delete params.path;

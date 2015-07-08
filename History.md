@@ -1,4 +1,11 @@
 
+0.3.2 / 2015-07-08
+==================
+
+ * set proxy origin through of parameters
+ * Improve REST-API error response
+ * bump "superagent" to "1.2.0"
+
 0.3.1 / 2015-03-31
 ==================
 

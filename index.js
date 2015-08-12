@@ -5,6 +5,7 @@
 
 var superagent = require('superagent');
 var debug = require('debug')('wpcom-xhr-request');
+var qs = require('qs');
 
 /**
  * Export a single `request` function.
@@ -63,7 +64,7 @@ function request (params, fn) {
 
   // URL querystring values
   if (params.query) {
-    req.query(params.query);
+    req.query(qs.stringify(params.query, { indices: false }));
     debug('API send URL querystring: %o', params.query);
     delete params.query;
   }

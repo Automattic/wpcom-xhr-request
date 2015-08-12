@@ -64,7 +64,7 @@ function request (params, fn) {
 
   // URL querystring values
   if (params.query) {
-    req.query(qs.stringify(params.query, { indices: false }));
+    req.query(qs.stringify(params.query, { arrayFormat: 'brackets' }));
     debug('API send URL querystring: %o', params.query);
     delete params.query;
   }

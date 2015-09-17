@@ -85,6 +85,31 @@ function request (params, fn) {
       req.field(key, value);
     }
   }
+  
+  // optional request handlers
+  if ('function' === typeof params.onprogress) {
+    req.onprogress = params.onProgress;
+    delete params.onprogress;
+  }
+  
+  if (params.upload && 'function' === typeof params.upload.onprogress) {
+    req.upload.onprogress = params.upload.onload;
+    delete params.upload.onprogress;
+  }
+  
+  if (params.upload && 'function' === typeof params.upload.onload) {
+    req.upload.onload = params.upload.onload;
+    delete params.upload.onload;
+  }
+  
+  if (params.upload) {
+    delete params.upload;
+  }
+  
+  if ('function' === typeof params.onabort) {
+    req.onabort = params.onabort;
+    delete params.onabort;
+  }
 
   // start the request
   req.end(function (err, res){

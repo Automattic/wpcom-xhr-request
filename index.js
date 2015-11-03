@@ -70,8 +70,14 @@ function request (params, fn) {
 
   // POST API request body
   if (params.body) {
-    req.send(params.body);
-    debug('API send POST body: ', params.body);
+    // GET requests don't support body; convert to querystring
+    if (method === 'get') {
+      req.query(params.body);
+      debug('API body to URL querystring: ', params.body);
+    } else {
+      req.send(params.body);
+      debug('API send POST body: ', params.body);
+    }
     delete params.body;
   }
 

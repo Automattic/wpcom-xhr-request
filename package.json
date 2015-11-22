@@ -16,6 +16,7 @@
     "Nathan Rajlich <nathan@automattic.com>"
   ],
   "repository": "git://github.com/Automattic/wpcom-xhr-request.git",
+  "license": "MIT",
   "main": "index.js",
   "devDependencies": {
     "browserify": "6.1.0"

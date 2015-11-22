@@ -2,7 +2,8 @@
 0.3.3 / 2015-11-22
 ==================
 
- * package: update "debug" to v2.2.0
+  * add LICENSE file and add "license" to package.json
+  * package: update "debug" to v2.2.0
 
 0.3.2 / 2015-07-08
 ==================

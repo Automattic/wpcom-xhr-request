@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WordPress.com Blog - Posts list</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <script src="../../dist/wpcom-xhr-request.js"></script>
+    <script>
+        var req = WPCOM.xhr( {
+          path: '/sites/en.blog.wordpress.com/posts'
+        }, function( err, res ) {
+          if ( err ) throw err;
+
+          console.log(res);
+
+          var d = document.createElement( 'pre' );
+          d.innerHTML = JSON.stringify( res, null, 2 );
+          document.body.appendChild( d );
+        } );
+    </script>
+  </body>
+</html>

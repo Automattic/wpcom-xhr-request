@@ -25,6 +25,11 @@ var proxyOrigin = 'https://public-api.wordpress.com';
 var defaultApiVersion = '1';
 
 /**
+ * WP-API Versions
+ */
+var wpApiVersions = ['2'];
+
+/**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
  * @param {Object|String} params
@@ -48,7 +53,14 @@ function request (params, fn) {
   proxyOrigin = params.proxyOrigin || proxyOrigin;
   delete params.proxyOrigin;
 
-  var url = proxyOrigin + '/rest/v' + apiVersion + params.path;
+  var basePath = '/rest/v' + apiVersion;
+
+  // if this is a wp-api request, adjust basePath
+  if ( wpApiVersions.indexOf( apiVersion ) !== -1 ) {
+    basePath = '/wp-json';
+  }
+
+  var url = proxyOrigin + basePath + params.path;
   debug('API URL: %o', url);
   delete params.path;
 

@@ -3,6 +3,7 @@
  * Module dependencies.
  */
 
+var WPError = require('wp-error');
 var superagent = require('superagent');
 var debug = require('debug')('wpcom-xhr-request');
 
@@ -116,29 +117,16 @@ function request (params, fn) {
       body._headers = headers;
     }
 
-    if (!err) {
-      return fn(null, body);
-    }
+    if (res.ok) {
+      fn(null, body);
+    } else {
+      var wpe = WPError({
+        path: res.req.path, method: method
+      }, statusCode, body);
 
-    err = new Error();
-    err.statusCode = statusCode;
-    for (var i in body) {
-      err[i] = body[i];
+      fn(wpe);
     }
-
-    if (body && body.error) {
-      err.name = toTitle(body.error) + 'Error';
-    }
-
-    fn(err);
   });
 
   return req.xhr;
-}
-
-function toTitle (str) {
-  if (!str || 'string' !== typeof str) return '';
-  return str.replace(/((^|_)[a-z])/g, function ($1) {
-    return $1.toUpperCase().replace('_', '');
-  });
 }

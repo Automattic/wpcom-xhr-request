@@ -1,4 +1,11 @@
 
+0.4.0 / 2016-03-09
+==================
+
+  * dist: recompile
+  * Readme++
+  * Use `wp-error` for common Erorr handling logic
+
 0.3.4 / 2016-2-18
 ==================
 

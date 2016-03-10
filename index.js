@@ -121,7 +121,7 @@ function request (params, fn) {
       fn(null, body);
     } else {
       var wpe = WPError({
-        path: res.req.path, method: method
+        path: res.req.path, method: res.req.method
       }, statusCode, body);
 
       fn(wpe);

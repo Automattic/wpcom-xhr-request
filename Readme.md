@@ -24,11 +24,11 @@ $ npm install wpcom-xhr-request
   <body>
     <script src="wpcom-xhr-request.js"></script>
     <script>
-      WPCOM.xhr('/me', function(err, res){
+      WPCOM.xhr('/me', function(err, data) {
         if (err) throw err;
 
         var div = document.createElement('div');
-        div.innerHTML = 'Your WordPress.com "username" is: <b>@' + res.username + '<\/b>';
+        div.innerHTML = 'Your WordPress.com "username" is: <b>@' + data.username + '<\/b>';
         document.body.appendChild(div);
       });
     </script>

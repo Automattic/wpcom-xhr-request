@@ -9,7 +9,7 @@
     "api",
     "oauth"
   ],
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": "Automattic, Inc.",
   "contributors": [
     "Damian Suarez <rdsuarez@gmail.com>",

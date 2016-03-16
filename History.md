@@ -1,4 +1,9 @@
 
+0.4.1 / 2016-03-16
+==================
+
+  * [[`8fd9102cc6`](https://github.com/Automattic/wpcom-xhr-request/commit/8fd9102cc6)] - use the `req.method` for the WPError method (Nathan Rajlich)
+
 0.4.0 / 2016-03-09
 ==================
 

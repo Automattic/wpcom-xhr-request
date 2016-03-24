@@ -87,7 +87,7 @@ function request (params, fn) {
   // POST API request body
   if (params.body) {
     req.send(params.body);
-    debug('API send POST body: ', params.body);
+    debug('API send POST body: %o', params.body);
     delete params.body;
   }
 

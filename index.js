@@ -26,11 +26,6 @@ var proxyOrigin = 'https://public-api.wordpress.com';
 var defaultApiVersion = '1';
 
 /**
- * WP-API Namespaces
- */
-var wpApiNamespaces = ['wp'];
-
-/**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
  * @param {Object|String} params
@@ -59,8 +54,12 @@ function request (params, fn) {
 
   var basePath = '/rest/v' + apiVersion;
 
-  // if this is a wp-api request, adjust basePath
-  if ( apiNamespace && wpApiNamespaces.indexOf( apiNamespace ) !== -1 ) {
+  // If this is a WP-API request, adjust basePath
+  if ( apiNamespace && /\//.test( apiNamespace ) ) {
+    // New-style WP-API URL: /wpcom/v2/sites/%s/post-counts
+    basePath = '/' + apiNamespace;
+  } else if ( apiNamespace ) {
+    // Old-style WP-API URL (deprecated): /wp-json/sites/%s/wpcom/v2/post-counts
     basePath = '/wp-json';
   }
 

@@ -1,3 +1,7 @@
+0.5.0 / 2016-03-28
+==================
+
+* adds support for new WP-API URL structure; deprecates old URL structure
 
 0.4.1 / 2016-03-16
 ==================

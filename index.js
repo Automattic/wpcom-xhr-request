@@ -101,6 +101,13 @@ function request (params, fn) {
     }
   }
 
+  var headers = params.headers || {};
+  for (var key in headers) {
+    var value = headers[key];
+    debug('adding HTTP header %o: %o', key, value);
+    req.set(key, value);
+  }
+
   // start the request
   req.end(function (err, res){
     if (err && !res) {

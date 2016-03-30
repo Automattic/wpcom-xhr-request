@@ -1,7 +1,7 @@
 0.5.0 / 2016-03-28
 ==================
 
-* adds support for new WP-API URL structure; deprecates old URL structure
+  * adds support for new WP-API URL structure; deprecates old URL structure
 
 0.4.1 / 2016-03-16
 ==================
@@ -18,7 +18,7 @@
 0.3.4 / 2016-2-18
 ==================
 
-* adds support for special `apiNamespace` param to integrate core WP-API
+  * adds support for special `apiNamespace` param to integrate core WP-API
 
 0.3.3 / 2015-11-22
 ==================

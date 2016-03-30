@@ -108,6 +108,11 @@ function request (params, fn) {
     req.set(key, value);
   }
 
+  if (!req.get('Accept')) {
+    // set a default "Accept" header preferring a JSON response
+    req.set('Accept', '*/json,*/*');
+  }
+
   // start the request
   req.end(function (err, res){
     if (err && !res) {

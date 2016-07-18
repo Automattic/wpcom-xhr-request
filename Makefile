@@ -12,7 +12,15 @@ BIN := $(NODE_MODULES)/.bin
 # applications
 NODE ?= node
 NPM ?= $(NODE) $(shell which npm)
+WEBPACK ?= $(NODE) $(BIN)/webpack
+MOCHA ?= $(NODE) $(BIN)/mocha
 CHOKI ?= $(BIN)/chokidar
+
+# create standalone bundle for testing purpose
+standalone: build build/wpcom-xhr-request.js
+
+build/wpcom-xhr-request.js:
+	@$(WEBPACK) -p --config ./examples/webpack.config.js
 
 install: node_modules
 
@@ -25,4 +33,25 @@ watch: watch/index.js
 watch/index.js:
 	$(CHOKI) $(ROOT) -c 'make'
 
-.PHONY: standalone install watch
+test:
+	@$(MOCHA) \
+		--timeout 120s \
+		--slow 3s \
+		--grep "$(FILTER)" \
+		--bail \
+		--reporter spec \
+		--compilers js:babel-register \
+		test/
+
+test-watch:
+	@$(MOCHA) \
+		--timeout 120s \
+		--slow 3s \
+		--grep "$(FILTER)" \
+		--bail \
+		--watch \
+		--reporter spec \
+		--compilers js:babel-register \
+		test/
+
+.PHONY: standalone install watch test

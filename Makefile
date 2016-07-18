@@ -3,30 +3,26 @@
 THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
 
-# BIN directory
-BIN := $(THIS_DIR)/node_modules/.bin
+ROOT := index.js
+include $(shell node -e "require('n8-make')")
+
+NODE_MODULES = $(THIS_DIR)/node_modules
+BIN := $(NODE_MODULES)/.bin
 
 # applications
 NODE ?= node
 NPM ?= $(NODE) $(shell which npm)
-BROWSERIFY ?= $(NODE) $(BIN)/browserify
-
-standalone: dist/wpcom-xhr-request.js
+CHOKI ?= $(BIN)/chokidar
 
 install: node_modules
-
-clean:
-	@rm -rf node_modules dist
-
-dist:
-	@mkdir -p $@
-
-dist/wpcom-xhr-request.js: node_modules index.js dist
-	@$(BROWSERIFY) -s WPCOM.xhr index.js > $@
 
 node_modules: package.json
 	@NODE_ENV= $(NPM) install
 	@touch node_modules
 
+watch: watch/index.js
 
-.PHONY: standalone install clean
+watch/index.js:
+	$(CHOKI) $(ROOT) -c 'make'
+
+.PHONY: standalone install watch

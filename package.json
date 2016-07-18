@@ -10,6 +10,14 @@
     "oauth"
   ],
   "version": "0.5.0",
+  "scripts": {
+    "prepublish": "make build"
+  },
+  "files": [
+    "build",
+    "History.md",
+    "README.md"
+  ],
   "author": "Automattic, Inc.",
   "contributors": [
     "Damian Suarez <rdsuarez@gmail.com>",

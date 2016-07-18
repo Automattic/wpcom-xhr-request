@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WordPress.com REST API XMLHttpRequest "Freshly Pressed" Test Page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <script src="../../dist/wpcom-xhr-request.js"></script>
+    <script>
+
+      // initiate an API request for the "Freshly Pressed" blog posts
+      WPCOM.xhr('/freshly-pressed', function(err, data){
+        if (err) throw err;
+        log('Freshly Pressed Posts:');
+        data.posts.forEach(function (post) {
+          log('  ' + post.title + ' - ' + post.short_URL);
+        });
+      });
+
+      function log (str) {
+        var d = document.createElement('pre');
+        d.innerHTML = str;
+        document.body.appendChild(d);
+
+        console.log(d.firstChild.nodeValue);
+      }
+    </script>
+  </body>
+</html>

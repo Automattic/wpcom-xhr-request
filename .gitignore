@@ -1,4 +1,5 @@
 /node_modules
+/examples/browser/dist
 /tmp
 /?.js
 /build

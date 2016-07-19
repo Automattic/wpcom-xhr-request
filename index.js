@@ -24,8 +24,9 @@ const defaultApiVersion = '1';
 /**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
- * @param {Object|String} params
- * @param {Function} fn
+ * @param {Object|String} params - request parameters
+ * @param {Function} fn - callback function
+ * @return { XHR } xhr instance
  * @api public
  */
 export default function request( params, fn ) {
@@ -33,19 +34,24 @@ export default function request( params, fn ) {
 		params = { path: params };
 	}
 
+	// method
 	const requestMethod = ( params.method || 'GET' ).toLowerCase();
 	debug( 'API HTTP Method: %o', requestMethod );
 	delete params.method;
 
-	const apiVersion = params.apiVersion || defaultApiVersion;
-	delete params.apiVersion;
-
+	// apiNamespace (WP-API)
 	const { apiNamespace } = params;
 	delete params.apiNamespace;
 
+	// apiVersion (REST-API)
+	const apiVersion = params.apiVersion || defaultApiVersion;
+	delete params.apiVersion;
+
+	// proxyOrigin
 	proxyOrigin = params.proxyOrigin || proxyOrigin;
 	delete params.proxyOrigin;
 
+	// request base path
 	let basePath = '/rest/v' + apiVersion;
 
 	// If this is a WP-API request, adjust basePath
@@ -56,6 +62,15 @@ export default function request( params, fn ) {
 		// Old-style WP-API URL (deprecated): /wp-json/sites/%s/wpcom/v2/post-counts
 		basePath = '/wp-json';
 	}
+
+	// is REST-API api?
+	const isRestAPI = apiNamespace === undefined;
+
+	// Envelope mode FALSE as default
+	let isEnvelopeMode = false;
+
+	// process response in evelope mode TRUE as default
+	const processResponseInEnvelopeMode = params.processResponseInEnvelopeMode !== false;
 
 	const url = proxyOrigin + basePath + params.path;
 	debug( 'API URL: %o', url );
@@ -74,6 +89,11 @@ export default function request( params, fn ) {
 	if ( params.query ) {
 		req.query( params.query );
 		debug( 'API send URL querystring: %o', params.query );
+
+		isEnvelopeMode = isRestAPI
+			? params.query.http_envelope
+			: params.query._envelope;
+
 		delete params.query;
 	}
 
@@ -113,21 +133,44 @@ export default function request( params, fn ) {
 			return fn( error );
 		}
 
-		const { body, headers, statusCode } = response;
+		let { body, headers, statusCode } = response;
+		const { ok } = response;
+		const { path, method } = response.req;
+		headers.status = statusCode;
 
 		debug( '%o -> %o headers', url, headers );
 		debug( '%o -> %o status code', url, statusCode );
 
-		if ( response.ok ) {
-			fn( null, body, headers );
-		} else {
-			headers.status = statusCode;
+		if ( ok ) {
+			if ( isEnvelopeMode && processResponseInEnvelopeMode ) {
+				debug( 'processing response in envelope mode' );
 
-			const { path, method } = response.req;
-			const wpe = WPError( { path, method }, statusCode, body );
+				if ( isRestAPI ) {
+					// in the REST-API the response comes wrapped in `code`, `headers` and `body` fields
+					headers = body.headers;
+					statusCode = body.code;
+					body = body.body;
+				} else {
+					// in the WP-API the response comes wrapped in `body`, `status` and `headers`
+					headers = body.headers;
+					statusCode = body.status;
+					body = body.body;
+				}
 
-			fn( wpe, null, headers );
+				// let's add the status into the headers
+				headers.status = statusCode;
+
+				if ( null !== statusCode && 2 !== Math.floor( statusCode / 100 ) ) {
+					debug( 'Error detected!' );
+					const wpe = WPError( { path, method }, statusCode, body );
+					return fn( wpe, null, headers );
+				}
+			}
+			return fn( null, body, headers );
 		}
+
+		const wpe = WPError( { path, method }, statusCode, body );
+		return fn( wpe, null, headers );
 	} );
 
 	return req.xhr;

@@ -15,6 +15,7 @@ NPM ?= $(NODE) $(shell which npm)
 WEBPACK ?= $(NODE) $(BIN)/webpack
 MOCHA ?= $(NODE) $(BIN)/mocha
 CHOKI ?= $(BIN)/chokidar
+SERVE = $(BIN)/serve
 
 # create standalone bundle for testing purpose
 standalone: build build/wpcom-xhr-request.js
@@ -53,5 +54,8 @@ test-watch:
 		--reporter spec \
 		--compilers js:babel-register \
 		test/
+
+examples: standalone
+	$(SERVE) -p 3002
 
 .PHONY: standalone install watch test

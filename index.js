@@ -24,12 +24,14 @@ const defaultApiVersion = '1';
 /**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
- * @param {Object|String} params - request parameters
+ * @param {Object|String} originalParams - request parameters
  * @param {Function} fn - callback function
  * @return { XHR } xhr instance
  * @api public
  */
-export default function request( params, fn ) {
+export default function request( originalParams, fn ) {
+	let params = Object.assign( {}, originalParams );
+
 	if ( 'string' === typeof params ) {
 		params = { path: params };
 	}

@@ -9,6 +9,7 @@ import { expect } from 'chai';
  * Internal dependencies
  */
 import xhr from '../';
+import { authToken } from './util';
 
 /**
  * Expose xhr for development purpose
@@ -31,7 +32,7 @@ describe( 'wpcom-xhr-request', () => {
 								apiVersion: '1.1'
 							}, ( error, body, headers ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body ).to.be.ok;
@@ -39,6 +40,27 @@ describe( 'wpcom-xhr-request', () => {
 								expect( body.ID ).to.be.equal( postId );
 								expect( body.site_ID ).to.be.a( 'number' );
 								expect( body.site_ID ).to.be.equal( siteId );
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 200 );
+
+								done();
+							} );
+						} );
+
+						it( '[1.1] should get `Me` user data', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								authToken
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.not.ok;
+
+								// body
+								expect( body ).to.be.ok;
+								expect( body.ID ).to.be.a( 'number' );
 
 								// headers
 								expect( headers ).to.be.ok;
@@ -59,7 +81,7 @@ describe( 'wpcom-xhr-request', () => {
 								}
 							}, ( error, body, headers ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body ).to.be.ok;
@@ -71,6 +93,30 @@ describe( 'wpcom-xhr-request', () => {
 								// headers
 								expect( headers ).to.be.ok;
 								expect( headers.status ).to.be.equal( 200 );
+								done();
+							} );
+						} );
+
+						it( '[1.1] should get `Me` user data', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								authToken,
+								query: {
+									http_envelope: 1
+								}
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.not.ok;
+
+								// body
+								expect( body ).to.be.ok;
+								expect( body.ID ).to.be.a( 'number' );
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 200 );
+
 								done();
 							} );
 						} );
@@ -162,6 +208,29 @@ describe( 'wpcom-xhr-request', () => {
 								// headers
 								expect( headers ).to.be.ok;
 								expect( headers.status ).to.be.equal( 403 );
+
+								done();
+							} );
+						} );
+
+						it( '[1.1] should get `400` for an invalid token', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								authToken: String( Math.random() ).substr( 2 )
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.ok;
+								expect( error.name ).to.be.equal( 'InvalidTokenError' );
+								expect( error.message ).to.be.ok;
+								expect( error.statusCode ).to.be.equal( 400 );
+
+								// body
+								expect( body ).to.be.not.ok;
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 400 );
 
 								done();
 							} );
@@ -268,6 +337,32 @@ describe( 'wpcom-xhr-request', () => {
 								done();
 							} );
 						} );
+
+						it( '[1.1] should get `400` for an invalid token', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								authToken: String( Math.random() ).substr( 2 ),
+								query: {
+									http_envelope: 1
+								}
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.ok;
+								expect( error.name ).to.be.equal( 'InvalidTokenError' );
+								expect( error.message ).to.be.ok;
+								expect( error.statusCode ).to.be.equal( 400 );
+
+								// body
+								expect( body ).to.be.not.ok;
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 400 );
+
+								done();
+							} );
+						} );
 					} );
 				} );
 			} );
@@ -283,7 +378,7 @@ describe( 'wpcom-xhr-request', () => {
 								apiNamespace: 'wp/v2'
 							}, ( error, body, headers ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body ).to.be.ok;
@@ -310,7 +405,7 @@ describe( 'wpcom-xhr-request', () => {
 								}
 							}, ( error, body, headers ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body ).to.be.ok;
@@ -489,7 +584,7 @@ describe( 'wpcom-xhr-request', () => {
 								apiNamespace: 'wpcom/v2'
 							}, ( error, body ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body.found ).to.be.ok;
@@ -511,7 +606,7 @@ describe( 'wpcom-xhr-request', () => {
 								}
 							}, ( error, body ) => {
 								// error
-								expect( error ).to.be.an( 'null' );
+								expect( error ).to.be.not.ok;
 
 								// body
 								expect( body ).to.be.ok;
@@ -621,7 +716,7 @@ describe( 'wpcom-xhr-request', () => {
 							apiNamespace: 'wp/v2'
 						}, ( error, body, headers ) => {
 							// error
-							expect( error ).to.be.an( 'null' );
+							expect( error ).to.be.not.ok;
 
 							// body
 							expect( body ).to.be.ok;
@@ -645,7 +740,7 @@ describe( 'wpcom-xhr-request', () => {
 							apiNamespace: 'wp/v2'
 						}, ( error, body, headers ) => {
 							// error
-							expect( error ).to.be.an( 'null' );
+							expect( error ).to.be.not.ok;
 
 							// body
 							expect( body ).to.be.ok;
@@ -671,7 +766,7 @@ describe( 'wpcom-xhr-request', () => {
 							}
 						}, ( error, body, headers ) => {
 							// error
-							expect( error ).to.be.an( 'null' );
+							expect( error ).to.be.not.ok;
 
 							// body
 							expect( body ).to.be.ok;
@@ -697,7 +792,7 @@ describe( 'wpcom-xhr-request', () => {
 							}
 						}, ( error, body, headers ) => {
 							// error
-							expect( error ).to.be.an( 'null' );
+							expect( error ).to.be.not.ok;
 
 							// body
 							expect( body ).to.be.ok;

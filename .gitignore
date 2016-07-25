@@ -1,5 +1,6 @@
 /node_modules
 /examples/browser/dist
+/test/config.js
 /tmp
 /?.js
 /build

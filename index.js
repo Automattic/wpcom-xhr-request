@@ -2,142 +2,178 @@
 /**
  * Module dependencies.
  */
-
-var WPError = require('wp-error');
-var superagent = require('superagent');
-var debug = require('debug')('wpcom-xhr-request');
+import WPError from 'wp-error';
+import superagent from 'superagent';
+import debugFactory from 'debug';
 
 /**
- * Export a single `request` function.
+ * Module variables
  */
-
-module.exports = request;
+const debug = debugFactory( 'wpcom-xhr-request' );
 
 /**
  * WordPress.com REST API base endpoint.
  */
-
-var proxyOrigin = 'https://public-api.wordpress.com';
+let proxyOrigin = 'https://public-api.wordpress.com';
 
 /**
  * Default WordPress.com REST API Version.
  */
-
-var defaultApiVersion = '1';
+const defaultApiVersion = '1';
 
 /**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
- * @param {Object|String} params
- * @param {Function} fn
+ * @param {Object|String} originalParams - request parameters
+ * @param {Function} fn - callback function
+ * @return { XHR } xhr instance
  * @api public
  */
+export default function request( originalParams, fn ) {
+	let params = Object.assign( {}, originalParams );
 
-function request (params, fn) {
+	if ( 'string' === typeof params ) {
+		params = { path: params };
+	}
 
-  if ('string' == typeof params) {
-    params = { path: params };
-  }
+	// method
+	const requestMethod = ( params.method || 'GET' ).toLowerCase();
+	debug( 'API HTTP Method: %o', requestMethod );
+	delete params.method;
 
-  var method = (params.method || 'GET').toLowerCase();
-  debug('API HTTP Method: %o', method);
-  delete params.method;
+	// apiNamespace (WP-API)
+	const { apiNamespace } = params;
+	delete params.apiNamespace;
 
-  var apiVersion = params.apiVersion || defaultApiVersion;
-  delete params.apiVersion;
+	// apiVersion (REST-API)
+	const apiVersion = params.apiVersion || defaultApiVersion;
+	delete params.apiVersion;
 
-  var apiNamespace = params.apiNamespace;
-  delete params.apiNamespace;
+	// proxyOrigin
+	proxyOrigin = params.proxyOrigin || proxyOrigin;
+	delete params.proxyOrigin;
 
-  proxyOrigin = params.proxyOrigin || proxyOrigin;
-  delete params.proxyOrigin;
+	// request base path
+	let basePath = '/rest/v' + apiVersion;
 
-  var basePath = '/rest/v' + apiVersion;
+	// If this is a WP-API request, adjust basePath
+	if ( apiNamespace && /\//.test( apiNamespace ) ) {
+		// New-style WP-API URL: /wpcom/v2/sites/%s/post-counts
+		basePath = '/' + apiNamespace;
+	} else if ( apiNamespace ) {
+		// Old-style WP-API URL (deprecated): /wp-json/sites/%s/wpcom/v2/post-counts
+		basePath = '/wp-json';
+	}
 
-  // If this is a WP-API request, adjust basePath
-  if ( apiNamespace && /\//.test( apiNamespace ) ) {
-    // New-style WP-API URL: /wpcom/v2/sites/%s/post-counts
-    basePath = '/' + apiNamespace;
-  } else if ( apiNamespace ) {
-    // Old-style WP-API URL (deprecated): /wp-json/sites/%s/wpcom/v2/post-counts
-    basePath = '/wp-json';
-  }
+	// is REST-API api?
+	const isRestAPI = apiNamespace === undefined;
 
-  var url = proxyOrigin + basePath + params.path;
-  debug('API URL: %o', url);
-  delete params.path;
+	// Envelope mode FALSE as default
+	let isEnvelopeMode = false;
 
-  // create HTTP Request object
-  var req = superagent[method](url);
+	// process response in evelope mode TRUE as default
+	const processResponseInEnvelopeMode = params.processResponseInEnvelopeMode !== false;
 
-  // Token authentication
-  if (params.authToken) {
-    req.set('Authorization', 'Bearer ' + params.authToken);
-    delete params.authToken;
-  }
+	const url = proxyOrigin + basePath + params.path;
+	debug( 'API URL: %o', url );
+	delete params.path;
 
-  // URL querystring values
-  if (params.query) {
-    req.query(params.query);
-    debug('API send URL querystring: %o', params.query);
-    delete params.query;
-  }
+	// create HTTP Request object
+	const req = superagent[ requestMethod ]( url );
 
-  // POST API request body
-  if (params.body) {
-    req.send(params.body);
-    debug('API send POST body: %o', params.body);
-    delete params.body;
-  }
+	// Token authentication
+	if ( params.authToken ) {
+		req.set( 'Authorization', 'Bearer ' + params.authToken );
+		delete params.authToken;
+	}
 
-  // POST FormData (for `multipart/form-data`, usually a file upload)
-  if (params.formData) {
-    for (var i = 0; i < params.formData.length; i++) {
-      var data = params.formData[i];
-      var key = data[0];
-      var value = data[1];
-      debug('adding FormData field %o', key);
-      req.field(key, value);
-    }
-  }
+	// URL querystring values
+	if ( params.query ) {
+		req.query( params.query );
+		debug( 'API send URL querystring: %o', params.query );
 
-  var headers = params.headers || {};
-  for (var key in headers) {
-    var value = headers[key];
-    debug('adding HTTP header %o: %o', key, value);
-    req.set(key, value);
-  }
+		isEnvelopeMode = isRestAPI
+			? params.query.http_envelope
+			: params.query._envelope;
 
-  if (!req.get('Accept')) {
-    // set a default "Accept" header preferring a JSON response
-    req.set('Accept', '*/json,*/*');
-  }
+		delete params.query;
+	}
 
-  // start the request
-  req.end(function (err, res){
-    if (err && !res) {
-      return fn(err);
-    }
+	// POST API request body
+	if ( params.body ) {
+		req.send( params.body );
+		debug( 'API send POST body: %o', params.body );
+		delete params.body;
+	}
 
-    var body = res.body;
-    var headers = res.headers;
-    var statusCode = res.status;
-    debug('%o -> %o status code', url, statusCode);
+	// POST FormData (for `multipart/form-data`, usually a file upload)
+	if ( params.formData ) {
+		for ( let i = 0; i < params.formData.length; i++ ) {
+			const data = params.formData[ i ];
+			const key = data[ 0 ];
+			const value = data[ 1 ];
+			debug( 'adding FormData field %o', key );
+			req.field( key, value );
+		}
+	}
 
-    if (body && headers) {
-      body._headers = headers;
-    }
+	const requestHeaders = params.headers || {};
+	for ( const key in requestHeaders ) {
+		const value = requestHeaders[ key ];
+		debug( 'adding HTTP header %o: %o', key, value );
+		req.set( key, value );
+	}
 
-    if (res.ok) {
-      fn(null, body);
-    } else {
-      var wpe = WPError({
-        path: res.req.path, method: res.req.method
-      }, statusCode, body);
+	if ( ! req.get( 'Accept' ) ) {
+		// set a default "Accept" header preferring a JSON response
+		req.set( 'Accept', '*/json,*/*' );
+	}
 
-      fn(wpe);
-    }
-  });
+	// start the request
+	req.end( ( error, response ) => {
+		if ( error && ! response ) {
+			return fn( error );
+		}
 
-  return req.xhr;
+		let { body, headers, statusCode } = response;
+		const { ok } = response;
+		const { path, method } = response.req;
+		headers.status = statusCode;
+
+		debug( '%o -> %o headers', url, headers );
+		debug( '%o -> %o status code', url, statusCode );
+
+		if ( ok ) {
+			if ( isEnvelopeMode && processResponseInEnvelopeMode ) {
+				debug( 'processing response in envelope mode' );
+
+				if ( isRestAPI ) {
+					// in the REST-API the response comes wrapped in `code`, `headers` and `body` fields
+					headers = body.headers;
+					statusCode = body.code;
+					body = body.body;
+				} else {
+					// in the WP-API the response comes wrapped in `body`, `status` and `headers`
+					headers = body.headers;
+					statusCode = body.status;
+					body = body.body;
+				}
+
+				// let's add the status into the headers
+				headers.status = statusCode;
+
+				if ( null !== statusCode && 2 !== Math.floor( statusCode / 100 ) ) {
+					debug( 'Error detected!' );
+					const wpe = WPError( { path, method }, statusCode, body );
+					return fn( wpe, null, headers );
+				}
+			}
+			return fn( null, body, headers );
+		}
+
+		const wpe = WPError( { path, method }, statusCode, body );
+		return fn( wpe, null, headers );
+	} );
+
+	return req.xhr;
 }

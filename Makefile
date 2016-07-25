@@ -3,30 +3,59 @@
 THIS_MAKEFILE_PATH:=$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 THIS_DIR:=$(shell cd $(dir $(THIS_MAKEFILE_PATH));pwd)
 
-# BIN directory
-BIN := $(THIS_DIR)/node_modules/.bin
+ROOT := index.js
+include $(shell node -e "require('n8-make')")
+
+NODE_MODULES = $(THIS_DIR)/node_modules
+BIN := $(NODE_MODULES)/.bin
 
 # applications
 NODE ?= node
 NPM ?= $(NODE) $(shell which npm)
-BROWSERIFY ?= $(NODE) $(BIN)/browserify
+WEBPACK ?= $(NODE) $(BIN)/webpack
+MOCHA ?= $(NODE) $(BIN)/mocha
+CHOKI ?= $(BIN)/chokidar
+SERVE = $(BIN)/serve
 
-standalone: dist/wpcom-xhr-request.js
+# create standalone bundle for testing purpose
+standalone: build build/wpcom-xhr-request.js
+
+build/wpcom-xhr-request.js:
+	@$(WEBPACK) -p --config ./examples/webpack.config.js
 
 install: node_modules
-
-clean:
-	@rm -rf node_modules dist
-
-dist:
-	@mkdir -p $@
-
-dist/wpcom-xhr-request.js: node_modules index.js dist
-	@$(BROWSERIFY) -s WPCOM.xhr index.js > $@
 
 node_modules: package.json
 	@NODE_ENV= $(NPM) install
 	@touch node_modules
 
+watch: watch/index.js
 
-.PHONY: standalone install clean
+watch/index.js:
+	$(CHOKI) $(ROOT) -c 'make'
+
+test:
+	@$(MOCHA) \
+		--timeout 120s \
+		--slow 3s \
+		--grep "$(FILTER)" \
+		--bail \
+		--reporter spec \
+		--compilers js:babel-register \
+		test/
+
+test-watch:
+	@$(MOCHA) \
+		--timeout 120s \
+		--slow 3s \
+		--grep "$(FILTER)" \
+		--bail \
+		--watch \
+		--reporter spec \
+		--compilers js:babel-register \
+		test/
+
+examples: standalone
+	$(SERVE) -p 3002
+
+.PHONY: standalone install watch test

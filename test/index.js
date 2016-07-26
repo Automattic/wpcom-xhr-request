@@ -69,6 +69,30 @@ describe( 'wpcom-xhr-request', () => {
 								done();
 							} );
 						} );
+
+						it( '[1.1] should get `Me` passing headers', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								headers: {
+									Authorization: `Bearer ${ authToken }`,
+									Accept: '*/json,*/*'
+								}
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.not.ok;
+
+								// body
+								expect( body ).to.be.ok;
+								expect( body.ID ).to.be.a( 'number' );
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 200 );
+
+								done();
+							} );
+						} );
 					} );
 
 					describe( 'http_envelope:1', () => {

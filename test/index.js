@@ -9,8 +9,14 @@ import { expect } from 'chai';
  * Internal dependencies
  */
 import xhr from '../';
-import { siteDomain, wporgProxyOrigin, siteId, postId } from './config';
-import { authToken, formData } from './util';
+import {
+	authToken,
+	formData,
+	postId,
+	siteDomain,
+	siteId,
+	wporgProxyOrigin,
+} from './util';
 
 /**
  * Expose xhr for development purpose

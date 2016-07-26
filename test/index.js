@@ -69,6 +69,30 @@ describe( 'wpcom-xhr-request', () => {
 								done();
 							} );
 						} );
+
+						it( '[1.1] should get `Me` passing headers', done => {
+							xhr( {
+								path: '/me',
+								apiVersion: '1.1',
+								headers: {
+									Authorization: `Bearer ${ authToken }`,
+									Accept: '*/json,*/*'
+								}
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.not.ok;
+
+								// body
+								expect( body ).to.be.ok;
+								expect( body.ID ).to.be.a( 'number' );
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 200 );
+
+								done();
+							} );
+						} );
 					} );
 
 					describe( 'http_envelope:1', () => {
@@ -861,6 +885,7 @@ describe( 'wpcom-xhr-request', () => {
 					it( '[wp/v2] should get `403` for a authorization-required error', done => {
 						xhr( {
 							path: '/users/me',
+							proxyOrigin: wporgProxyOrigin,
 							apiNamespace: 'wp/v2'
 						}, ( error, body, headers ) => {
 							// error
@@ -938,6 +963,7 @@ describe( 'wpcom-xhr-request', () => {
 						xhr( {
 							path: '/users/me',
 							apiNamespace: 'wp/v2',
+							proxyOrigin: wporgProxyOrigin,
 							query: {
 								_envelope: 1
 							}

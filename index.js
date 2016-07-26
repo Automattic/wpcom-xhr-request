@@ -103,6 +103,9 @@ export default function request( options, fn ) {
 	// is REST-API api?
 	settings.isRestAPI = options.apiNamespace === undefined;
 
+	// normalize request-method name
+	settings.method = settings.method.toLowerCase();
+
 	const {
 		apiNamespace,
 		apiVersion,
@@ -115,8 +118,6 @@ export default function request( options, fn ) {
 		query,
 		proxyOrigin
 	} = settings;
-
-	settings.method = method.toLowerCase();
 
 	// request base path
 	let basePath;
@@ -159,7 +160,7 @@ export default function request( options, fn ) {
 			const data = formData[ i ];
 			const key = data[ 0 ];
 			const value = data[ 1 ];
-			debug( 'adding FormData field %o', key );
+			debug( 'adding FormData field %o: %o', key, value );
 			req.field( key, value );
 		}
 	}

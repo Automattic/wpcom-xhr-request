@@ -14,12 +14,25 @@ try {
 	config = {};
 }
 
-const { token, mediaFiles } = config;
-
-// gran token event from config file or TOKEN env var
+// grab token even from config file or TOKEN env var
+const { token } = config;
 export const authToken = token || process.env.TOKEN;
 
+export const siteDomain = 'wpcomjstest.wordpress.com';
+export const wporgProxyOrigin = 'http://retrofocs.wpsandbox.me/wp-json';
+export const siteId = 91295513;
+export const postId = 18828;
+
 // media file
+
+export const mediaFiles = [
+	{
+		title: 'WordPress logo',
+		description: 'Nice WordPress logo',
+		file: './test/wordpress-logo.png'
+	},
+	'./test/wordpress-logo-2.png'
+];
 export const formData = [];
 const file = fs.createReadStream( mediaFiles[ 1 ] );
 formData.push( [ 'media[]', file ] );

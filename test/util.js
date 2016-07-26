@@ -1,4 +1,9 @@
 /**
+ * External dependencies
+ */
+const fs = require( 'fs' );
+
+/**
  * Internal dependencies
  */
 let config;
@@ -9,7 +14,12 @@ try {
 	config = {};
 }
 
-const { token } = config;
+const { token, mediaFiles } = config;
 
 // gran token event from config file or TOKEN env var
 export const authToken = token || process.env.TOKEN;
+
+// media file
+export const formData = [];
+const file = fs.createReadStream( mediaFiles[ 1 ] );
+formData.push( [ 'media[]', file ] );

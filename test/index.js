@@ -861,6 +861,7 @@ describe( 'wpcom-xhr-request', () => {
 					it( '[wp/v2] should get `403` for a authorization-required error', done => {
 						xhr( {
 							path: '/users/me',
+							proxyOrigin: wporgProxyOrigin,
 							apiNamespace: 'wp/v2'
 						}, ( error, body, headers ) => {
 							// error
@@ -938,6 +939,7 @@ describe( 'wpcom-xhr-request', () => {
 						xhr( {
 							path: '/users/me',
 							apiNamespace: 'wp/v2',
+							proxyOrigin: wporgProxyOrigin,
 							query: {
 								_envelope: 1
 							}

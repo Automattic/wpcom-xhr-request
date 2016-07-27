@@ -1,3 +1,22 @@
+
+1.0.0 / 2016-07-27
+==================
+
+ * core: refact core using ES2015
+ * make: add `examples` rule
+ * test: add REST-API and WP-API tests
+ * core: handling http envelope mode
+ * add circle integration
+ * pkg: compile in prepublish. Set npm pack files
+ * compile bundle only for examples purposes
+ * ignoring build/ folder
+ * set eslint rules
+ * make: clean old rules. add `watch` to improve compilation process
+ * pkg: add dev modules. remove browserify.
+ * pkg: update superagent to `2.1.0`
+ * Update version dependency for `wp-error`
+ * index: add support for custom HTTP `headers`
+ 
 0.5.0 / 2016-03-28
 ==================
 

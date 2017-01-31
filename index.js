@@ -86,6 +86,19 @@ const sendResponse = ( req, settings, fn ) => {
 };
 
 /**
+ * Returns `true` if `v` is a File Form Data, `false` otherwise.
+ *
+ * @param {Mixed} v - instance to analize
+ * @return {Boolean} `true` if `v` is a DOM File instance
+ * @private
+ */
+function isFile( v ) {
+	return v instanceof Object &&
+		'undefined' !== typeof( Blob ) &&
+		v.fileContents instanceof Blob;
+}
+
+/**
  * Performs an XMLHttpRequest against the WordPress.com REST API.
  *
  * @param {Object|String} options - `request path` or `request parameters`
@@ -161,7 +174,12 @@ export default function request( options, fn ) {
 			const key = data[ 0 ];
 			const value = data[ 1 ];
 			debug( 'adding FormData field %o: %o', key, value );
-			req.field( key, value );
+
+			if ( isFile( value ) ) {
+				req.attach( key, new File( [ value.fileContents ], value.fileName ) );
+			} else {
+				req.field( key, value );
+			}
 		}
 	}
 

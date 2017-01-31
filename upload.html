@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WordPress.com REST API XMLHttpRequest Media Upload Test Page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <input type="file" id="file" multiple>
+    <script src="http://wzrd.in/standalone/wpcom-browser-auth@1.0.x"></script>
+    <script src="../../dist/wpcom-xhr-request.js"></script>
+    Select one or more files to upload to site ID: <strong id="site"></strong>
+    <script>
+      var auth = wpcomBrowserAuth.response();
+
+      function onchange (e) {
+        // construct a 2D `formData` array for the selected files
+        var formData = [];
+        for (var i = 0; i < e.target.files.length; i++) {
+          formData.push(['media[]', e.target.files[i]]);
+        }
+        console.log(formData);
+
+        // do the API request through a CORS XHR request
+        var req = WPCOM.xhr({
+          authToken: auth.access_token,
+          path: '/sites/' + auth.site_id + '/media/new',
+          method: 'POST',
+          formData: formData
+        }, function(err, res){
+          console.error(arguments);
+          if (err) throw err;
+          console.log(res);
+        });
+
+        req.upload.addEventListener('progress', onprogress, false);
+      }
+
+      function onprogress (e) {
+        if (e.lengthComputable) {
+          var percentComplete = e.loaded / e.total;
+          console.log(e.loaded, e.total, percentComplete);
+        } else {
+          // Unable to compute progress information since the total size is unknown
+        }
+      }
+
+      if (auth && auth.access_token) {
+        // OAuth response
+        document.getElementById('site').innerHTML = auth.site_id;
+
+        // select files on the "input" element
+        var input = document.getElementById('file');
+        input.onchange = onchange;
+      } else {
+        // redirect to OAuth page
+        wpcomBrowserAuth.redirect('37197');
+      }
+    </script>
+  </body>
+</html>

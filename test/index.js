@@ -556,7 +556,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'UnauthorizedError' );
-								expect( error.message ).to.be.equal( 'You are not currently logged in.' );
+								expect( error.message ).to.be.equal( 'That API call requires authentication against the correct blog.' );
 								expect( error.statusCode ).to.be.equal( 401 );
 
 								// body
@@ -635,7 +635,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'UnauthorizedError' );
-								expect( error.message ).to.be.equal( 'You are not currently logged in.' );
+								expect( error.message ).to.be.equal( 'That API call requires authentication against the correct blog.' );
 								expect( error.statusCode ).to.be.equal( 401 );
 
 								// body
@@ -921,7 +921,7 @@ describe( 'wpcom-xhr-request', () => {
 							// error
 							expect( error ).to.be.ok;
 							expect( error.name ).to.be.equal( 'NotFoundError' );
-							expect( error.message ).to.be.equal( 'Invalid post id.' );
+							expect( error.message ).to.be.equal( 'Invalid post ID.' );
 							expect( error.statusCode ).to.be.equal( 404 );
 
 							// body
@@ -998,7 +998,7 @@ describe( 'wpcom-xhr-request', () => {
 							// error
 							expect( error ).to.be.ok;
 							expect( error.name ).to.be.equal( 'NotFoundError' );
-							expect( error.message ).to.be.equal( 'Invalid post id.' );
+							expect( error.message ).to.be.equal( 'Invalid post ID.' );
 							expect( error.statusCode ).to.be.equal( 404 );
 
 							// body

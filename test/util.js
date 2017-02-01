@@ -16,7 +16,7 @@ try {
 
 // grab token even from config file or TOKEN env var
 const { token } = config;
-export const authToken = token || process.env.TOKEN;
+export const authToken = process.env.TOKEN || token;
 
 export const siteDomain = 'wpcomjstest.wordpress.com';
 export const wporgProxyOrigin = 'http://retrofocs.wpsandbox.me/wp-json';

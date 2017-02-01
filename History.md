@@ -1,4 +1,10 @@
 
+1.1.0 / 2017-02-01
+==================
+
+ * test: prioritize ENV var when taking the TOKEN
+ * improve sending files handling
+
 1.0.0 / 2016-07-27
 ==================
 

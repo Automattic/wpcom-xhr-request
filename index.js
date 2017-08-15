@@ -162,7 +162,10 @@ export default function request( options, fn ) {
 	}
 
 	// body
-	if ( body ) {
+	if ( body && formData ) {
+		debug( 'API ignoring body because formData is set. They cannot both be used together.' );
+	}
+	if ( body && ! formData ) {
 		req.send( body );
 		debug( 'API send POST body: %o', body );
 	}

@@ -534,7 +534,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'NotFoundError' );
-								expect( error.message ).to.be.equal( 'Invalid post id.' );
+								expect( error.message ).to.be.equal( 'Invalid post ID.' );
 								expect( error.statusCode ).to.be.equal( 404 );
 
 								// body
@@ -610,7 +610,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'NotFoundError' );
-								expect( error.message ).to.be.equal( 'Invalid post id.' );
+								expect( error.message ).to.be.equal( 'Invalid post ID.' );
 								expect( error.statusCode ).to.be.equal( 404 );
 
 								// body

@@ -31,8 +31,12 @@ export const mediaFiles = [
 		description: 'Nice WordPress logo',
 		file: './test/wordpress-logo.png'
 	},
-	'./test/wordpress-logo-2.png'
+	'./test/wordpress-logo-2.png',
+	'./test/wordpress-logo-3.png'
 ];
 export const formData = [];
 const file = fs.createReadStream( mediaFiles[ 1 ] );
 formData.push( [ 'media[]', file ] );
+export const formData2 = [];
+const file2 = fs.createReadStream( mediaFiles[ 2 ] );
+formData2.push( [ 'media[]', file2 ] );

@@ -12,6 +12,7 @@ import xhr from '../';
 import {
 	authToken,
 	formData,
+	formData2,
 	postId,
 	siteDomain,
 	siteId,
@@ -129,6 +130,32 @@ describe( 'wpcom-xhr-request', () => {
 								apiVersion: '1.1',
 								authToken,
 								formData
+							}, ( error, body, headers ) => {
+								// error
+								expect( error ).to.be.not.ok;
+
+								// body
+								expect( body ).to.be.ok;
+								expect( body ).to.be.an( 'object' );
+								expect( body.media ).to.be.an( 'array' );
+								expect( body.media[ 0 ].ID ).to.be.a( 'number' );
+
+								// headers
+								expect( headers ).to.be.ok;
+								expect( headers.status ).to.be.equal( 200 );
+
+								done();
+							} );
+						} );
+
+						it( '[1.1] [POST] should upload a media file even if body is set', done => {
+							xhr( {
+								path: `/sites/${ siteDomain }/media/new`,
+								method: 'POST',
+								apiVersion: '1.1',
+								authToken,
+								body: {},
+								formData: formData2,
 							}, ( error, body, headers ) => {
 								// error
 								expect( error ).to.be.not.ok;
@@ -534,7 +561,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'NotFoundError' );
-								expect( error.message ).to.be.equal( 'Invalid post id.' );
+								expect( error.message ).to.be.equal( 'Invalid post ID.' );
 								expect( error.statusCode ).to.be.equal( 404 );
 
 								// body
@@ -610,7 +637,7 @@ describe( 'wpcom-xhr-request', () => {
 								// error
 								expect( error ).to.be.ok;
 								expect( error.name ).to.be.equal( 'NotFoundError' );
-								expect( error.message ).to.be.equal( 'Invalid post id.' );
+								expect( error.message ).to.be.equal( 'Invalid post ID.' );
 								expect( error.statusCode ).to.be.equal( 404 );
 
 								// body

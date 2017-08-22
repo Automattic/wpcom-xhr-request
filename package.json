@@ -11,6 +11,8 @@
   ],
   "version": "1.1.0",
   "scripts": {
+    "pretest": "make build",
+    "test": "mocha --timeout 120s --slow 3s --bail --reporter spec --compilers js:babel-register test",
     "prepublish": "make build"
   },
   "files": [

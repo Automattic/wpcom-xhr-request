@@ -1,3 +1,13 @@
+1.1.2 / 2018-07-23
+==================
+
+ * Upgrade the 'superagent' dependency to 3.8.3
+ * Upgrade the 'debug' dependency to 3.1.0
+
+1.1.1 / 2017-08-22
+==================
+
+ * Prevent sending body if formData is set
 
 1.1.0 / 2017-02-01
 ==================

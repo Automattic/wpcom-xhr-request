@@ -1,3 +1,8 @@
+1.1.3 / 2019-04-03
+==================
+
+ * Add babel-runtime as dependency to package.json
+
 1.1.2 / 2018-07-23
 ==================
 

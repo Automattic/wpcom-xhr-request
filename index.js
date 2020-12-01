@@ -24,6 +24,8 @@ const defaults = {
 	method: 'get',
 	query: null,
 	processResponseInEnvelopeMode: true,
+	expectStreamMode: false,
+	onStreamRecord: () => {},
 	proxyOrigin: 'https://public-api.wordpress.com',
 	url: ''
 };
@@ -40,7 +42,9 @@ const sendResponse = ( req, settings, fn ) => {
 	const {
 		isEnvelopeMode,
 		isRestAPI,
-		processResponseInEnvelopeMode
+		processResponseInEnvelopeMode,
+		expectStreamMode,
+		onStreamRecord,
 	} = settings;
 
 	req.end( ( error, response ) => {
@@ -55,7 +59,8 @@ const sendResponse = ( req, settings, fn ) => {
 		headers.status = statusCode;
 
 		if ( ok ) {
-			if ( isEnvelopeMode && processResponseInEnvelopeMode ) {
+			// Endpoints in stream mode always send enveloped responses (see below).
+			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || expectStreamMode ) {
 				// override `error`, body` and `headers`
 				if ( isRestAPI ) {
 					headers = body.headers;
@@ -81,6 +86,77 @@ const sendResponse = ( req, settings, fn ) => {
 		const wpe = WPError( { path, method }, statusCode, body );
 		return fn( wpe, null, headers );
 	} );
+
+	// Endpoints in stream mode behave like ordinary endpoints, in that the response contains a JSON
+	// representation of some value or WP_Error, but they will also stream other JSON records before
+	// that (e.g. progress messages), in application/x-ndjson format.
+	//
+	// The intent is for the last line of a $stream mode response to be exactly the same as the non-
+	// $stream response, but always enveloped as if we were in ?_envelope=1. I hate enveloping as a
+	// matter of principle, but we can’t go back and change the HTTP status code after streaming.
+	if ( expectStreamMode ) {
+		// Streaming responses is trickier than you might expect, with many footguns:
+		// • req.buffer(false): no version of superagent implements this when running in the browser
+		// • req.parse() or superagent.parse[]: only gets called when the response ends (see above)
+		// • req.on("progress"): doesn’t seem to work... at all
+		// • req.responseType(anything): makes superagent skip parse functions (see above)
+		// • req.xhr.responseType="blob": XHR only exposes partial responses in "" or "text" modes
+		// • req.xhr: only available after you call req.end()
+
+		// Expose partial responses.
+		// <https://xhr.spec.whatwg.org/#the-response-attribute>
+		req.xhr.responseType = 'text';
+
+		// Force the response to be treated as UTF-8. This is easier than the x-user-defined trick
+		// that would otherwise be needed to access the raw binary response body.
+		// <https://xhr.spec.whatwg.org/#final-charset>
+		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#31-serialization>
+		// <https://stackoverflow.com/a/33042003>
+		req.xhr.overrideMimeType( 'application/x-ndjson; charset=utf-8' );
+
+		// Find response chunks that end in a newline (possibly preceded by a carriage return), then
+		// for each chunk except the last, parse it as JSON and pass that to onStreamRecord.
+		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#31-serialization>
+		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+		// <https://stackoverflow.com/a/38440028>
+		let lastLine = null;
+		let start = 0;
+
+		req.xhr.addEventListener( 'progress', ( { target } ) => {
+			// Don’t use ProgressEvent#loaded in this algorithm. It measures progress in octets,
+			// while we’re working with text that has already been decoded from UTF-8 into a string
+			// that can only be indexed in UTF-16 code units. Reconciling this difference is not
+			// worth the effort, and might even be impossible if there were encoding errors.
+			let stop;
+			while ( true ) {
+				stop = target.response.indexOf( '\n', start );
+
+				if ( stop < 0 ) {
+					// Leave start untouched for the next progress event, waiting for the newline
+					// that indicates we’ve finished receiving a full line.
+					break;
+				}
+
+				// Note: not ignoring empty lines.
+				// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+				if ( lastLine !== null ) {
+					const record = JSON.parse( lastLine.trim() );
+					debug( 'stream mode: record=%o', record );
+					onStreamRecord( record );
+				}
+
+				lastLine = target.response.slice( start, stop );
+
+				// Make subsequent searches start *after* the newline.
+				start = stop + 1;
+			}
+		} );
+
+		// Parse the last response chunk as above, but pass it to the higher layers as The Response.
+		// Note: not ignoring empty lines.
+		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+		req.parse( () => JSON.parse( lastLine.trim() ) );
+	}
 
 	return req;
 };

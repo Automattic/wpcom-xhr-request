@@ -92,8 +92,13 @@ const sendResponse = ( req, settings, fn ) => {
 	// that (e.g. progress messages), in application/x-ndjson format.
 	//
 	// The intent is for the last line of a $stream mode response to be exactly the same as the non-
-	// $stream response, but always enveloped as if we were in ?_envelope=1. I hate enveloping as a
-	// matter of principle, but we can’t go back and change the HTTP status code after streaming.
+	// $stream response, but always enveloped as if we were in ?_envelope=1. The other JSON records
+	// are also enveloped in the same way, but with .status == 100.
+	//
+	// I hate enveloping as a matter of principle, but it’s unavoidable in both of these cases. For
+	// the last line, which represents the whole response in non-$stream mode, we need to convey the
+	// HTTP status code after the body has started. For the other lines, we need an unambiguous way
+	// to know that they’re not the last line, so we can exclude it without a “delay line”.
 	if ( expectStreamMode ) {
 		// Streaming responses is trickier than you might expect, with many footguns:
 		// • req.buffer(false): no version of superagent implements this when running in the browser
@@ -137,15 +142,17 @@ const sendResponse = ( req, settings, fn ) => {
 					break;
 				}
 
+				lastLine = target.response.slice( start, stop );
+
 				// Note: not ignoring empty lines.
 				// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
-				if ( lastLine !== null ) {
-					const record = JSON.parse( lastLine.trim() );
-					debug( 'stream mode: record=%o', record );
-					onStreamRecord( record );
-				}
+				const record = JSON.parse( lastLine.trim() );
 
-				lastLine = target.response.slice( start, stop );
+				// Non-last lines should have .status == 100.
+				if ( record.status < 200 ) {
+					debug( 'stream mode: record=%o', record );
+					onStreamRecord( record.body );
+				}
 
 				// Make subsequent searches start *after* the newline.
 				start = stop + 1;

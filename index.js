@@ -120,6 +120,10 @@ const sendResponse = ( req, settings, fn ) => {
 		let lastLine = null;
 		let start = 0;
 
+		// A progress event is guaranteed to be fired after the end of the response body, so we
+		// should never miss any data.
+		// <https://xhr.spec.whatwg.org/#the-send()-method>
+		// <https://xhr.spec.whatwg.org/#handle-response-end-of-body>
 		req.xhr.addEventListener( 'progress', ( { target } ) => {
 			// Don’t use ProgressEvent#loaded in this algorithm. It measures progress in octets,
 			// while we’re working with text that has already been decoded from UTF-8 into a string

@@ -137,8 +137,8 @@ export default function request( options, fn ) {
 
 	if ( isRestAPI ) {
 		basePath = `/rest/v${ apiVersion }`;
-	} else if ( apiNamespace && /\//.test( apiNamespace ) ) {
-		basePath = '/' + apiNamespace;	// wpcom/v2
+	} else if (apiNamespace) {
+		basePath = /\//.test(apiNamespace) ? apiNamespace : `/${apiNamespace}`;
 	} else {
 		basePath = '/wp-json'; // /wp-json/sites/%s/wpcom/v2 (deprecated)
 	}

@@ -143,9 +143,10 @@ const sendResponse = ( req, settings, fn ) => {
 
 				lastLine = target.response.slice( start, stop );
 
+				// Parse the response chunk as JSON, ignoring trailing carriage returns.
 				// Note: not ignoring empty lines.
 				// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
-				const record = JSON.parse( lastLine.trim() );
+				const record = JSON.parse( lastLine );
 
 				// Non-last lines should have .status == 100.
 				if ( record.status < 200 ) {
@@ -161,7 +162,7 @@ const sendResponse = ( req, settings, fn ) => {
 		// Parse the last response chunk as above, but pass it to the higher layers as The Response.
 		// Note: not ignoring empty lines.
 		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
-		req.parse( () => JSON.parse( lastLine.trim() ) );
+		req.parse( () => JSON.parse( lastLine ) );
 	}
 
 	return req;

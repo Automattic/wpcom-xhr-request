@@ -112,13 +112,6 @@ const sendResponse = ( req, settings, fn ) => {
 		// <https://xhr.spec.whatwg.org/#the-response-attribute>
 		req.xhr.responseType = 'text';
 
-		// Force the response to be treated as UTF-8. This is easier than the x-user-defined trick
-		// that would otherwise be needed to access the raw binary response body.
-		// <https://xhr.spec.whatwg.org/#final-charset>
-		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#31-serialization>
-		// <https://stackoverflow.com/a/33042003>
-		req.xhr.overrideMimeType( 'application/x-ndjson; charset=utf-8' );
-
 		// Find response chunks that end in a newline (possibly preceded by a carriage return), then
 		// for each chunk except the last, parse it as JSON and pass that to onStreamRecord.
 		// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#31-serialization>

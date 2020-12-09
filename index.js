@@ -24,7 +24,6 @@ const defaults = {
 	method: 'get',
 	query: null,
 	processResponseInEnvelopeMode: true,
-	processResponseInStreamMode: false,
 	onStreamRecord: () => {},
 	proxyOrigin: 'https://public-api.wordpress.com',
 	url: ''
@@ -43,7 +42,6 @@ const sendResponse = ( req, settings, fn ) => {
 		isEnvelopeMode,
 		isRestAPI,
 		processResponseInEnvelopeMode,
-		processResponseInStreamMode,
 		onStreamRecord,
 	} = settings;
 
@@ -53,6 +51,17 @@ const sendResponse = ( req, settings, fn ) => {
 		}
 
 		let { body, headers, statusCode } = response;
+		const contentType = req.xhr
+			? req.xhr.getResponseHeader( 'Content-Type' )
+			: headers[ 'content-type' ];
+
+		if ( ! req.xhr ) {
+			// node
+			if ( shouldProcessInStreamMode( contentType ) ) {
+				const error = new Error( 'stream mode processing is not yet implemented for Node.js' );
+				return fn( error, body, headers );
+			}
+		}
 
 		const { ok } = response;
 		const { path, method } = response.req;
@@ -60,7 +69,7 @@ const sendResponse = ( req, settings, fn ) => {
 
 		if ( ok ) {
 			// Endpoints in stream mode always send enveloped responses (see below).
-			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || processResponseInStreamMode ) {
+			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || shouldProcessInStreamMode( contentType ) ) {
 				// override `error`, body` and `headers`
 				if ( isRestAPI ) {
 					headers = body.headers;
@@ -87,28 +96,25 @@ const sendResponse = ( req, settings, fn ) => {
 		return fn( wpe, null, headers );
 	} );
 
-	if ( processResponseInStreamMode ) {
-		if ( ! req.xhr ) {
-			throw new Error( 'processResponseInStreamMode is not yet implemented for Node.js' );
-		}
-
+	if ( req.xhr ) {
+		// web
 		req.xhr.addEventListener( 'readystatechange', event => {
 			if ( event.target.readyState !== XMLHttpRequest.HEADERS_RECEIVED ) {
 				return;
 			}
 
-			const type = event.target.getResponseHeader('Content-Type');
-
-			if ( type.split( ';' )[ 0 ] !== 'application/x-ndjson' ) {
-				return;
+			if ( shouldProcessInStreamMode( event.target.getResponseHeader( 'Content-Type' ) ) ) {
+				enableStreamModeProcessing( req, onStreamRecord );
 			}
-
-			enableStreamModeProcessing( req, onStreamRecord );
 		} );
 	}
 
 	return req;
 };
+
+function shouldProcessInStreamMode( contentType ) {
+	return contentType.split( ';' )[ 0 ] === 'application/x-ndjson';
+}
 
 // Endpoints in stream mode behave like ordinary endpoints, in that the response contains a JSON
 // representation of some value or WP_Error, but they will also stream other JSON records before
@@ -118,15 +124,11 @@ const sendResponse = ( req, settings, fn ) => {
 // $stream response, but always enveloped as if we were in ?_envelope=1. The other JSON records
 // are also enveloped in the same way, but with .status == 100.
 //
-// I hate enveloping as a matter of principle, but it’s unavoidable in both of these cases. For
-// the last line, which represents the whole response in non-$stream mode, we need to convey the
-// HTTP status code after the body has started. For the other lines, we need an unambiguous way
-// to know that they’re not the last line, so we can exclude it without a “delay line”.
+// One might object to enveloping as a matter of principle, but it’s unavoidable in both of these
+// cases. For the last line, which represents the whole response in non-$stream mode, we need to
+// convey the HTTP status code after the body has started. For the other lines, we need a way to
+// distinguish them from the last line, so we can exclude them without a “delay line”.
 function enableStreamModeProcessing( req, onStreamRecord ) {
-	if ( ! req.xhr ) {
-		throw new Error( 'processResponseInStreamMode is not yet implemented for Node.js' );
-	}
-
 	// Streaming responses is trickier than you might expect, with many footguns:
 	// • req.buffer(false): no version of superagent implements this when running in the browser
 	// • req.parse() or superagent.parse[]: only gets called when the response ends (see above)

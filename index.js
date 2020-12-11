@@ -51,13 +51,11 @@ const sendResponse = ( req, settings, fn ) => {
 		}
 
 		let { body, headers, statusCode } = response;
-		const contentType = req.xhr
-			? req.xhr.getResponseHeader( 'Content-Type' )
-			: headers[ 'content-type' ];
+		const processResponseInStreamMode = shouldProcessInStreamMode( headers[ 'content-type' ] );
 
 		if ( ! req.xhr ) {
 			// node
-			if ( shouldProcessInStreamMode( contentType ) ) {
+			if ( processResponseInStreamMode ) {
 				const error = new Error( 'stream mode processing is not yet implemented for Node.js' );
 				return fn( error, body, headers );
 			}
@@ -69,7 +67,7 @@ const sendResponse = ( req, settings, fn ) => {
 
 		if ( ok ) {
 			// Endpoints in stream mode always send enveloped responses (see below).
-			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || shouldProcessInStreamMode( contentType ) ) {
+			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || processResponseInStreamMode ) {
 				// override `error`, body` and `headers`
 				if ( isRestAPI ) {
 					headers = body.headers;
@@ -113,7 +111,7 @@ const sendResponse = ( req, settings, fn ) => {
 };
 
 function shouldProcessInStreamMode( contentType ) {
-	return contentType.split( ';' )[ 0 ] === 'application/x-ndjson';
+	return /^application[/]x-ndjson($|;)/.test( contentType );
 }
 
 // Endpoints in stream mode behave like ordinary endpoints, in that the response contains a JSON

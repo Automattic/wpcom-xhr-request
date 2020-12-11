@@ -1,3 +1,8 @@
+1.2.0 / 2020-12-11
+==================
+
+ * Add support for processing streamed `application/x-ndjson` responses
+
 1.1.3 / 2019-04-03
 ==================
 

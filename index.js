@@ -24,6 +24,7 @@ const defaults = {
 	method: 'get',
 	query: null,
 	processResponseInEnvelopeMode: true,
+	onStreamRecord: () => {},
 	proxyOrigin: 'https://public-api.wordpress.com',
 	url: ''
 };
@@ -40,7 +41,8 @@ const sendResponse = ( req, settings, fn ) => {
 	const {
 		isEnvelopeMode,
 		isRestAPI,
-		processResponseInEnvelopeMode
+		processResponseInEnvelopeMode,
+		onStreamRecord,
 	} = settings;
 
 	req.end( ( error, response ) => {
@@ -49,13 +51,23 @@ const sendResponse = ( req, settings, fn ) => {
 		}
 
 		let { body, headers, statusCode } = response;
+		const processResponseInStreamMode = shouldProcessInStreamMode( headers[ 'content-type' ] );
+
+		if ( ! req.xhr ) {
+			// node
+			if ( processResponseInStreamMode ) {
+				const error = new Error( 'stream mode processing is not yet implemented for Node.js' );
+				return fn( error, body, headers );
+			}
+		}
 
 		const { ok } = response;
 		const { path, method } = response.req;
 		headers.status = statusCode;
 
 		if ( ok ) {
-			if ( isEnvelopeMode && processResponseInEnvelopeMode ) {
+			// Endpoints in stream mode always send enveloped responses (see below).
+			if ( ( isEnvelopeMode && processResponseInEnvelopeMode ) || processResponseInStreamMode ) {
 				// override `error`, body` and `headers`
 				if ( isRestAPI ) {
 					headers = body.headers;
@@ -82,8 +94,100 @@ const sendResponse = ( req, settings, fn ) => {
 		return fn( wpe, null, headers );
 	} );
 
+	if ( req.xhr ) {
+		// web
+		req.xhr.addEventListener( 'readystatechange', event => {
+			if ( event.target.readyState !== XMLHttpRequest.HEADERS_RECEIVED ) {
+				return;
+			}
+
+			if ( shouldProcessInStreamMode( event.target.getResponseHeader( 'Content-Type' ) ) ) {
+				enableStreamModeProcessing( req, onStreamRecord );
+			}
+		} );
+	}
+
 	return req;
 };
+
+function shouldProcessInStreamMode( contentType ) {
+	return /^application[/]x-ndjson($|;)/.test( contentType );
+}
+
+// Endpoints in stream mode behave like ordinary endpoints, in that the response contains a JSON
+// representation of some value or WP_Error, but they will also stream other JSON records before
+// that (e.g. progress messages), in application/x-ndjson format.
+//
+// The intent is for the last line of a $stream mode response to be exactly the same as the non-
+// $stream response, but always enveloped as if we were in ?_envelope=1. The other JSON records
+// are also enveloped in the same way, but with .status == 100.
+//
+// One might object to enveloping as a matter of principle, but it’s unavoidable in both of these
+// cases. For the last line, which represents the whole response in non-$stream mode, we need to
+// convey the HTTP status code after the body has started. For the other lines, we need a way to
+// distinguish them from the last line, so we can exclude them without a “delay line”.
+function enableStreamModeProcessing( req, onStreamRecord ) {
+	// Streaming responses is trickier than you might expect, with many footguns:
+	// • req.buffer(false): no version of superagent implements this when running in the browser
+	// • req.parse() or superagent.parse[]: only gets called when the response ends (see above)
+	// • req.on("progress"): doesn’t seem to work... at all
+	// • req.responseType(anything): makes superagent skip parse functions (see above)
+	// • req.xhr.responseType="blob": XHR only exposes partial responses in "" or "text" modes
+	// • req.xhr: only available after you call req.end()
+
+	// Expose partial responses.
+	// <https://xhr.spec.whatwg.org/#the-response-attribute>
+	req.xhr.responseType = 'text';
+
+	// Find response chunks that end in a newline (possibly preceded by a carriage return), then
+	// for each chunk except the last, parse it as JSON and pass that to onStreamRecord.
+	// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#31-serialization>
+	// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+	// <https://stackoverflow.com/a/38440028>
+	let lastLine = null;
+	let start = 0;
+
+	// A progress event is guaranteed to be fired after the end of the response body, so we
+	// should never miss any data.
+	// <https://xhr.spec.whatwg.org/#the-send()-method>
+	// <https://xhr.spec.whatwg.org/#handle-response-end-of-body>
+	req.xhr.addEventListener( 'progress', ( { target } ) => {
+		// Don’t use ProgressEvent#loaded in this algorithm. It measures progress in octets,
+		// while we’re working with text that has already been decoded from UTF-8 into a string
+		// that can only be indexed in UTF-16 code units. Reconciling this difference is not
+		// worth the effort, and might even be impossible if there were encoding errors.
+		while ( true ) {
+			const stop = target.response.indexOf( '\n', start );
+
+			if ( stop < 0 ) {
+				// Leave start untouched for the next progress event, waiting for the newline
+				// that indicates we’ve finished receiving a full line.
+				break;
+			}
+
+			lastLine = target.response.slice( start, stop );
+
+			// Parse the response chunk as JSON, ignoring trailing carriage returns.
+			// Note: not ignoring empty lines.
+			// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+			const record = JSON.parse( lastLine );
+
+			// Non-last lines should have .status == 100.
+			if ( record.status < 200 ) {
+				debug( 'stream mode: record=%o', record );
+				onStreamRecord( record.body );
+			}
+
+			// Make subsequent searches start *after* the newline.
+			start = stop + 1;
+		}
+	} );
+
+	// Parse the last response chunk as above, but pass it to the higher layers as The Response.
+	// Note: not ignoring empty lines.
+	// <https://github.com/ndjson/ndjson-spec/blob/1.0/README.md#32-parsing>
+	req.parse( () => JSON.parse( lastLine ) );
+}
 
 /**
  * Returns `true` if `v` is a File Form Data, `false` otherwise.

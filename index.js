@@ -215,7 +215,7 @@ export default function request( options, fn ) {
 		options = { path: options };
 	}
 
-	const settings = Object.assign( {}, defaults, options );
+	const settings = { ...defaults, ...options };
 
 	// is REST-API api?
 	settings.isRestAPI = options.apiNamespace === undefined;

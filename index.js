@@ -223,6 +223,13 @@ export default function request( options, fn ) {
 	// normalize request-method name
 	settings.method = settings.method.toLowerCase();
 
+	// normalize origin
+	if ( typeof settings.proxyOrigin !== 'undefined' ) {
+		if ( settings.proxyOrigin.charAt( settings.proxyOrigin.length - 1 ) === '/' ) {
+			settings.proxyOrigin = settings.proxyOrigin.slice( 0, -1 );
+		}
+	}
+	
 	const {
 		apiNamespace,
 		apiVersion,

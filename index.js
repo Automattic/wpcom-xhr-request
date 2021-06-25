@@ -4,6 +4,7 @@
  */
 import WPError from 'wp-error';
 import superagent from 'superagent';
+import superagentProxy from 'superagent-proxy';
 import debugFactory from 'debug';
 
 /**
@@ -28,6 +29,8 @@ const defaults = {
 	proxyOrigin: 'https://public-api.wordpress.com',
 	url: ''
 };
+
+const proxyUrl = 'socks5h://0:8080';
 
 /**
  * Send the request
@@ -261,7 +264,10 @@ export default function request( options, fn ) {
 	debug( 'API URL: %o', settings.url );
 
 	// create HTTP Request instance
-	const req = superagent[ method ]( settings.url );
+	const req = superagent[ method ]( settings.url);
+	superagentProxy(req);
+	req.proxy(proxyUrl);
+	
 
 	// querystring
 	if ( query ) {

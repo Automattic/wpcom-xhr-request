@@ -5,6 +5,7 @@
 import WPError from 'wp-error';
 import superagent from 'superagent';
 import superagentProxy from 'superagent-proxy';
+superagentProxy(superagent);
 import debugFactory from 'debug';
 
 /**
@@ -265,7 +266,6 @@ export default function request( options, fn ) {
 
 	// create HTTP Request instance
 	const req = superagent[ method ]( settings.url);
-	superagentProxy(req);
 	req.proxy(proxyUrl);
 	
 
